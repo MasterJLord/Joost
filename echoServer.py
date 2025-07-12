@@ -8,10 +8,8 @@ server.waitForConnection()
 clientSocket = server.getConnection()
 print("here")
 for i in (0, 1, 2):
-    clientSocket.waitForMessage()
     print(clientSocket.getInt())
 
-clientSocket.waitForMessage()
 rand = clientSocket.getInt()
 
 print(rand)
