@@ -1,12 +1,19 @@
 # https://stackoverflow.com/questions/7749341/basic-python-client-socket-example
 
-import socket
+from socketThread import *
 
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serverSocket.bind(("localhost", 20422))
-serverSocket.listen(1)
+server = serverSocket(("localhost", 20422))
 
-print("1")
-connection = serverSocket.accept()[0]
+server.waitForConnection()
+clientSocket = server.getConnection()
 print("here")
-print(int(connection.recv(1)[0]))
+for i in (0, 1, 2):
+    clientSocket.waitForMessage()
+    print(clientSocket.getInt())
+
+clientSocket.waitForMessage()
+rand = clientSocket.getInt()
+
+print(rand)
+
+clientSocket.sendInt(rand)
