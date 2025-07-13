@@ -17,7 +17,7 @@ class socketThread:
     def __wait(self):
         while True:
             size = int.from_bytes(self.socket.recv(24))
-            newInt = int.from_bytes(self.socket.recv(size))
+            newInt = int.from_bytes(self.socket.recv(size), signed=True)
             self.receiveLock.acquire()
             self.unreadInts.append(newInt)
             if len(self.waitingThreads) == 0:
@@ -66,7 +66,7 @@ class socketThread:
         size = sys.getsizeof(message)
         self.sendLock.acquire()
         self.socket.send(size.to_bytes(24))
-        self.socket.send(message.to_bytes(size))
+        self.socket.send(message.to_bytes(size, signed=True))
         self.sendLock.release()
 
     
