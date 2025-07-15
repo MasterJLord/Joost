@@ -47,7 +47,7 @@ class socketThread:
         self.waitingThreads.append(myEvent)
         self.receiveLock.release()
         myEvent.wait()
-        # Gets the message we waited so long for
+        # Gets the message we waited for
         if peek:
             message = self.unreadInts[0]
             # Lets another thread get the same message
@@ -62,7 +62,6 @@ class socketThread:
         return(message)
 
     def sendInt(self, message : int) -> None:
-        # TODO: make this work with negative integers
         size = sys.getsizeof(message)
         self.sendLock.acquire()
         self.socket.send(size.to_bytes(24))
