@@ -1,10 +1,8 @@
-from socketThread import *
-from screenModes import screenModes
-import pygame
+from forwardDeclarations import *
 
-def mainMenuFrame(events):
+def _mainMenuFrame(events : list[pygame.Event], gameState : dict) -> tuple[dict, pygame.Display, function]:
     for e in events:
         if e.type == pygame.MOUSEBUTTONDOWN:
-            return (, "PLAYING")
+            return (gameState, gameState["screen"], lobbyFrame)
         else:
-            return (, "MAINMENU")
+            return (gameState, gameState["screen"], mainMenuFrame)

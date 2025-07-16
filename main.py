@@ -1,10 +1,12 @@
 from mainMenu import *
+from playingFunc import *
+from lobby import *
 import pygame
 
 pygame.init()
 clock = pygame.time.Clock()
 
-mode = "MAINMENU"
+mode = mainMenuFrame
 
 while True:
     events = pygame.event.get()
@@ -12,9 +14,7 @@ while True:
         if e.type == pygame.QUIT:
             sys.exit()
 
-    if mode == "MAINMENU":
-        (screen, mode) = mainMenuFrame(events)
-    elif mode == "PLAYING":
-        (screen, mode) = playFrame(events)
+    (gameState, screen, mode) = mode(events, gameState)
+
 
     pygame.display.update()
