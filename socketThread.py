@@ -96,4 +96,73 @@ class serverSocket:
     def isConnectionAvailable(self) -> bool:
         return len(self.connections) > 0
     
+"""
+A class that works similarly to socketThread, but for a server with multiple players in it
+Allows clients and host to behave identically, so code using this doesn't have to know which mode the serverConnector is in after setup
+"""
+class serverConnector:
+    def __init__(self, socketInfo, isHost : bool, lobbySize : int):
+        self.isHost = isHost
+        self.lobbySize = lobbySize
+        if isHost:
+            self.forwardThread = threading.Thread(target=self.__forwardMessages)
+            self.forwardThread.start()
+        else:
+            self.receivingThread = threading.Thread(target=self.__receiveFromServer)
+        self.receivedMessages = [[]] * lobbySize
+        self.sendersOrder = []
 
+    def __waitForJoiners(self):
+        self.playerConnections = [None] * self.lobbySize
+        self.newPlayerCatchup = []
+        """ 
+        Wait for any clients to join the server (possibly using serverSocket if that is convenient)
+        When they do, replace one of the slots in playerConnection with a socket corresponding to the connection with that player
+        Then, send them all of the newPlayerCatchup messages
+        And, start a new thread for the receiveFromClients function for that socket
+        """
+        
+
+    def __receiveFromClients(self, socketThread : int):
+        while True:
+            """
+            Wait for a message to come from the indicated socket
+            When one arrives:
+                add it to a list of messages received from that socket in receivedMessages
+                add that socket's number to sendersOrder
+                send the socketThread's number to all other clients, followed by the message (each client socket should receive all messages in the same order the server was sent them)
+            """
+        
+
+    def __receiveFromServer():
+        """
+        Wait for a message to come from the indicated socket
+        When one arrives, add it to a list of messages received from the player indicated in the message
+        """
+
+    def sendInt(self, message : int) -> None:
+        """
+        If this is a client, send the integer to the server; if this is a host, send my player number followed by the integer to all clients
+        """
+
+
+    def getInt(self, fromPlayer : int, peek : bool = False) -> int:
+        """
+        (If necessary) Waits until a message is available from the indicated player
+        Gets the next unread int from the indicated player
+        If peek is true, that message will be returned by the next call of this function; if it is not, the message will be removed so the next call of this function will return the next message 
+        """
+
+    def getMessagesAvailable() -> list[int]:
+        """
+        Return a list of integers representing how many messages are available from each player (e.g. if player 2 has sent 3 unread messages, the second element of the array will be 3)
+        """
+
+    def getNextSender(self) -> int:
+        """
+        returns the player number of the player who sent the earliest unread message
+        """
+
+
+    def isServer(self) -> bool:
+        return self.isServer
