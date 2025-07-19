@@ -13,7 +13,7 @@ class socketThread:
         self.waitingThreads = [] 
         self.receiveLock = threading.Lock()
         self.sendLock = threading.Lock()
-        self.waitingThread = threading.Thread(target=self.__wait)
+        self.waitingThread = threading.Thread(target=self.__wait, daemon=True)
         self.waitingThread.start()
 
     def __wait(self):
@@ -78,7 +78,7 @@ class serverSocket:
         self.socket.bind(location)
         self.socket.listen()
         self.connections = []
-        self.waitingThread = threading.Thread(target=self.__wait)
+        self.waitingThread = threading.Thread(target=self.__wait, daemon=True)
         self.waitingThread.start()
 
     def __wait(self):
@@ -113,7 +113,7 @@ class serverConnector:
         self.myPlayerNum: int = 0 if isHost else -1  # client learns later
 
         # Per-player unread message queues (list-of-lists of ints)
-        self._recv_queues: List[List[int]] = [[] for _ in range(lobbySize)]
+        self._recv_queues: List[List[int]] = [[]] * lobbySize
         # Chronological order of unread messages (player_ids)
         self._senders_order: List[int] = []
         # Condition protecting the above
@@ -138,16 +138,6 @@ class serverConnector:
             # Client receive loop
             self._recv_thread = threading.Thread(target=self._receiveFromServer, daemon=True)
             self._recv_thread.start()
-
-    # ------------------------------------------------------------------
-    # Host-side: queue state catch-up for future joiners
-    # ------------------------------------------------------------------
-    def addCatchup(self, player_id: int, message: int) -> None:
-        """Record a message that should be replayed to players who join later.
-        Host-only; no-op for clients."""
-        if not self.isHost:
-            return
-        self._new_player_catchup.append((player_id, message))
 
     # ------------------------------------------------------------------
     # Host: accept incoming client connections until lobby is full
@@ -234,18 +224,14 @@ class serverConnector:
         Client: send payload to host (host rebroadcasts)."""
         if self.isHost:
             # Host counts as player 0
-            pid = 0
             with self._cv:
-                self._recv_queues[pid].append(message)
-                self._senders_order.append(pid)
+                self._recv_queues[0].append(message)
+                self._senders_order.append(0)
                 self._cv.notify_all()
             # Broadcast to all clients
-            self._broadcast(pid, message, exclude_pid=None)
+            self._broadcast(0, message, exclude_pid=None)
         else:
-            try:
-                self._server_thread.sendInt(message)
-            except Exception:
-                pass
+            self._server_thread.sendInt(message)
 
     def getInt(self, fromPlayer: int, peek: bool = False) -> int:
         """Return next unread int from a specific player.
