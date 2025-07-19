@@ -78,28 +78,55 @@ class serverSocket:
         self.socket.bind(location)
         self.socket.listen()
         self.connections = []
+        self.waitEvents = []
+        self.lock = threading.Lock()
         self.waitingThread = threading.Thread(target=self.__wait, daemon=True)
         self.waitingThread.start()
 
     def __wait(self):
         while(True):
-            self.connections.append(socketThread(self.socket.accept()[0]))
+            nextSocket = socketThread(self.socket.accept()[0])
+            self.lock.acquire()
+            self.connections.append(nextSocket)
+            if len(self.waitEvents) > 0:
+                self.waitEvents.pop(0).set()
+            else:
+                self.lock.release()
     
     def getConnection(self) -> socketThread:
+        self.lock.acquire()
         if len(self.connections) > 0:
-            return(self.connections.pop(0))
+            connection = self.connections.pop(0)
+            self.lock.release()
+            return(connection)
         else:
-            return None
+            event = threading.Event()
+            self.waitEvents.append(event)
+            self.lock.release()
+            event.wait()
+            connection = self.connections.pop(0)
+            if len(self.connections) > 0 and len(self.waitEvents) > 0:
+                self.waitEvents.pop(0).set()
+            else:
+                self.lock.release()
+            return connection
     
     def waitForConnection(self) -> None:
-        while len(self.connections) == 0:
-            pass
+        event = threading.Event()
+        self.waitEvents.append(event)
+        event.wait()
+        if len(self.waitEvents) > 0:
+            self.waitEvents.pop(0).set()
+        else:
+            self.lock.release()
 
-    def isConnectionAvailable(self) -> bool:
-        return len(self.connections) > 0
+    def connectionsAvailable(self) -> int:
+        return len(self.connections)
     
+
+
 class serverConnector:
-    def __init__(self, socketInfo, isHost: bool, lobbySize: int):
+    def __init__(self, socketInfo : tuple, isHost: bool, lobbySize: Optional[int] = None):
         """
         Parameters
         ----------
@@ -112,21 +139,24 @@ class serverConnector:
         self.lobbySize = lobbySize
         self.myPlayerNum: int = 0 if isHost else -1  # client learns later
 
-        # Per-player unread message queues (list-of-lists of ints)
-        self._recv_queues: List[List[int]] = [[]] * lobbySize
+        # Per-player unread message queues 
+        self._receiveQueues: List[List[int]] = [[]] * lobbySize
         # Chronological order of unread messages (player_ids)
-        self._senders_order: List[int] = []
-        # Condition protecting the above
-        self._cv = threading.Condition()
-
-        # Backlog to send to new joiners (host only)
-        self._new_player_catchup: List[Tuple[int, int]] = []
+        self._messageOrder: List[int] = []
+        # Conditions protecting the above
+        self._incomingLock = threading.Condition()
+        self._outgoingLock = threading.Condition()
 
         if isHost:
-            # Create listening server socket
-            self._server = serverSocket(socketInfo)
+            # List of messages to be sent
+            self._backlog: List[List[Tuple[int, int]]] = [[]] * lobbySize
+            self._sendMessageEvents = [threading.Event() for _ in range(lobbySize)]
             # Will hold socketThread per-player index (0 unused for host)
             self._player_connections: List[Optional[socketThread]] = [None] * lobbySize
+
+            # Create listening server socket
+            self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._server.bind(socketInfo)
             # Start accept loop
             self._accept_thread = threading.Thread(target=self._waitForJoiners, daemon=True)
             self._accept_thread.start()
@@ -143,60 +173,61 @@ class serverConnector:
     # Host: accept incoming client connections until lobby is full
     # ------------------------------------------------------------------
     def _waitForJoiners(self) -> None:
-        next_pid = 1  # start assigning after host (0)
-        while next_pid < self.lobbySize:
+        next_playerNum = 1  # start assigning after host (0)
+        while next_playerNum < self.lobbySize:
             # Block until a connection is available from serverSocket
-            self._server.waitForConnection()
-            st = self._server.getConnection()
-            if st is None:
-                continue  # spurious
-            pid = next_pid
-            next_pid += 1
-            self._player_connections[pid] = st
+            socket = self._server.accept()[0]
+            playerNum = next_playerNum
+            next_playerNum += 1
+            self._player_connections[playerNum] = socket
 
             # Tell the client their player number first thing
-            st.sendInt(pid)
+            socket.sendInt(playerNum)
             # Replay catchup
-            for s_pid, msg in self._new_player_catchup:
-                st.sendInt(s_pid)
-                st.sendInt(msg)
+            for s_playerNum, message in self._backlog:
+                socket.sendInt(s_playerNum)
+                socket.sendInt(message)
 
             # Start a receiver thread for this client
-            threading.Thread(target=self._receiveFromClients, args=(pid, st), daemon=True).start()
+            threading.Thread(target=self._receiveFromClients, args=(playerNum, socket), daemon=True).start()
+            threading.Thread(target=self._sendToClients, args=(playerNum, socket), dameon=True).start()
 
     # ------------------------------------------------------------------
     # Host: receive loop for a single client connection
     # ------------------------------------------------------------------
-    def _receiveFromClients(self, pid: int, st: socketThread) -> None:
+    def _receiveFromClients(self, playerNum: int, socket: socketThread) -> None:
         while True:
             try:
-                msg = st.getInt()
+                message = socket.getInt()
             except Exception:
                 # Connection died; stop listening.
                 return
             # Record message and global order
-            with self._cv:
-                self._recv_queues[pid].append(msg)
-                self._senders_order.append(pid)
-                self._cv.notify_all()
+            with self._incomingLock:
+                self._receiveQueues[playerNum].append(message)
+                self._messageOrder.append(playerNum)
+                self._incomingLock.notify_all()
             # Broadcast tagged message to all *other* clients
-            self._broadcast(pid, msg, exclude_pid=pid)
+            self._broadcast(playerNum, message, excludePlayerNum=playerNum)
+
+    def _sendToClients(self, playerNum: int, socket : socketThread) -> None:
+        while True:
+            self._sendMessageEvents[playerNum].wait()
+            self._sendMessageEvents[playerNum].clear()
+            while len(self._backlog[playerNum]) > 0:
+                nextMessage = self._backlog[playerNum].pop(0)
+                socket.sendInt(nextMessage[0])
+                socket.sendInt(nextMessage[1])
 
     # ------------------------------------------------------------------
     # Host: broadcast helper
     # ------------------------------------------------------------------
-    def _broadcast(self, pid: int, msg: int, exclude_pid: Optional[int] = None) -> None:
+    def _broadcast(self, playerNum: int, message: int, excludePlayerNum: Optional[int] = None) -> None:
         for i in range(1, self.lobbySize):
-            if i == exclude_pid:
+            if i == excludePlayerNum:
                 continue
-            st = self._player_connections[i]
-            if st is None:
-                continue
-            try:
-                st.sendInt(pid)
-                st.sendInt(msg)
-            except Exception:
-                pass  # ignore send failures for now
+            self._backlog[i].append(message)
+            self._sendMessageEvents[i].set()
 
     # ------------------------------------------------------------------
     # Client: receive loop from host
@@ -206,14 +237,14 @@ class serverConnector:
         while True:
             try:
                 sender = st.getInt()  # player id
-                msg = st.getInt()     # payload
+                message = st.getInt()     # payload
             except Exception:
                 return
-            with self._cv:
+            with self._incomingLock:
                 if 0 <= sender < self.lobbySize:
-                    self._recv_queues[sender].append(msg)
-                    self._senders_order.append(sender)
-                    self._cv.notify_all()
+                    self._receiveQueues[sender].append(message)
+                    self._messageOrder.append(sender)
+                    self._incomingLock.notify_all()
 
     # ------------------------------------------------------------------
     # Public API --------------------------------------------------------
@@ -224,12 +255,12 @@ class serverConnector:
         Client: send payload to host (host rebroadcasts)."""
         if self.isHost:
             # Host counts as player 0
-            with self._cv:
-                self._recv_queues[0].append(message)
-                self._senders_order.append(0)
-                self._cv.notify_all()
+            with self._incomingLock:
+                self._receiveQueues[0].append(message)
+                self._messageOrder.append(0)
+                self._incomingLock.notify_all()
             # Broadcast to all clients
-            self._broadcast(0, message, exclude_pid=None)
+            self._broadcast(0, message, excludePlayerNum=None)
         else:
             self._server_thread.sendInt(message)
 
@@ -238,34 +269,34 @@ class serverConnector:
         Blocks until one is available. If peek=True, do not consume it."""
         if not (0 <= fromPlayer < self.lobbySize):
             raise ValueError("invalid player id")
-        with self._cv:
-            while not self._recv_queues[fromPlayer]:
-                self._cv.wait()
-            val = self._recv_queues[fromPlayer][0]
+        with self._incomingLock:
+            while not self._receiveQueues[fromPlayer]:
+                self._incomingLock.wait()
+            val = self._receiveQueues[fromPlayer][0]
             if not peek:
-                self._recv_queues[fromPlayer].pop(0)
+                self._receiveQueues[fromPlayer].pop(0)
                 # Also drop the matching earliest entry in senders_order
                 try:
-                    idx = self._senders_order.index(fromPlayer)
-                    self._senders_order.pop(idx)
+                    idx = self._messageOrder.index(fromPlayer)
+                    self._messageOrder.pop(idx)
                 except ValueError:
                     pass
             return val
 
     def getMessagesAvailable(self) -> List[int]:
         """Return list of unread counts per player."""
-        with self._cv:
-            return [len(q) for q in self._recv_queues]
+        with self._incomingLock:
+            return [len(q) for q in self._receiveQueues]
 
     def getNextSender(self, block: bool = True) -> Optional[int]:
         """Return player_id of earliest unread message (chronological).
         If block=False and none available, return None."""
-        with self._cv:
-            while block and not self._senders_order:
-                self._cv.wait()
-            if not self._senders_order:
+        with self._incomingLock:
+            while block and not self._messageOrder:
+                self._incomingLock.wait()
+            if not self._messageOrder:
                 return None
-            return self._senders_order[0]
+            return self._messageOrder[0]
 
     def isServer(self) -> bool:
         return self.isHost
