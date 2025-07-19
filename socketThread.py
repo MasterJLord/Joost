@@ -1,4 +1,6 @@
 import socket, threading, math, sys, time
+from typing import List, Optional, Tuple
+
 
 class socketThread:
     def __init__(self, socketInfo : socket.socket):
@@ -96,7 +98,6 @@ class serverSocket:
     def isConnectionAvailable(self) -> bool:
         return len(self.connections) > 0
     
-
 class serverConnector:
     def __init__(self, socketInfo, isHost: bool, lobbySize: int):
         """
@@ -151,9 +152,9 @@ class serverConnector:
     # ------------------------------------------------------------------
     # Host: accept incoming client connections until lobby is full
     # ------------------------------------------------------------------
-        while next_pid < self.lobbySize:
     def _waitForJoiners(self) -> None:
         next_pid = 1  # start assigning after host (0)
+        while next_pid < self.lobbySize:
             # Block until a connection is available from serverSocket
             self._server.waitForConnection()
             st = self._server.getConnection()
