@@ -1,9 +1,9 @@
 import socket, threading, math, sys, time
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 
 class socketThread:
-    def __init__(self, socketInfo : socket.socket):
+    def __init__(self, socketInfo : Union[socket.socket, tuple]):
         if type(socketInfo) == socket.socket:
             self.socket = socketInfo
         elif type(socketInfo) == tuple:
@@ -18,7 +18,7 @@ class socketThread:
 
     def __wait(self):
         while True:
-            size = int.from_bytes(self.socket.recv(24))
+            size = int.from_bytes(self.socket.recv(2))
             newInt = int.from_bytes(self.socket.recv(size), signed=True)
             self.receiveLock.acquire()
             self.unreadInts.append(newInt)
@@ -66,7 +66,7 @@ class socketThread:
     def sendInt(self, message : int) -> None:
         size = sys.getsizeof(message)
         self.sendLock.acquire()
-        self.socket.send(size.to_bytes(24))
+        self.socket.send(size.to_bytes(2))
         self.socket.send(message.to_bytes(size, signed=True))
         self.sendLock.release()
 
@@ -125,8 +125,10 @@ class serverSocket:
     
 
 
+
+
 class serverConnector:
-    def __init__(self, socketInfo : tuple, isHost: bool, lobbySize: Optional[int] = None):
+    def __init__(self, socketInfo : Tuple, isHost: bool, lobbySize: Optional[int] = None):
         """
         Parameters
         ----------
@@ -152,7 +154,7 @@ class serverConnector:
             self._backlog: List[List[Tuple[int, int]]] = [[]] * lobbySize
             self._sendMessageEvents = [threading.Event() for _ in range(lobbySize)]
             # Will hold socketThread per-player index (0 unused for host)
-            self._player_connections: List[Optional[socketThread]] = [None] * lobbySize
+            self._player_connections: List[Optional[socket.socket]] = [None] * lobbySize
 
             # Create listening server socket
             self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -162,12 +164,13 @@ class serverConnector:
             self._accept_thread.start()
         else:
             # Connect to host immediately
-            self._server_thread = socketThread(socketInfo)
+            self._clientThread : socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._clientThread.connect(socketInfo)
             # First int from server is my assigned player number
-            self.myPlayerNum = self._server_thread.getInt()
+            self.myPlayerNum = int.from_bytes(self._clientThread.recv(2))
             # Client receive loop
-            self._recv_thread = threading.Thread(target=self._receiveFromServer, daemon=True)
-            self._recv_thread.start()
+            self._receivingThread = threading.Thread(target=self._receiveFromServer, daemon=True)
+            self._receivingThread.start()
 
     # ------------------------------------------------------------------
     # Host: accept incoming client connections until lobby is full
@@ -182,13 +185,9 @@ class serverConnector:
             self._player_connections[playerNum] = socket
 
             # Tell the client their player number first thing
-            socket.sendInt(playerNum)
-            # Replay catchup
-            for s_playerNum, message in self._backlog:
-                socket.sendInt(s_playerNum)
-                socket.sendInt(message)
+            socket.send(playerNum.to_bytes(2))
 
-            # Start a receiver thread for this client
+            # Start two threads for this client
             threading.Thread(target=self._receiveFromClients, args=(playerNum, socket), daemon=True).start()
             threading.Thread(target=self._sendToClients, args=(playerNum, socket), dameon=True).start()
 
@@ -198,7 +197,8 @@ class serverConnector:
     def _receiveFromClients(self, playerNum: int, socket: socketThread) -> None:
         while True:
             try:
-                message = socket.getInt()
+                messageSize = int.from_bytes(socket.recv(2))
+                message = int.from_bytes(socket.recv(messageSize))
             except Exception:
                 # Connection died; stop listening.
                 return
@@ -210,14 +210,16 @@ class serverConnector:
             # Broadcast tagged message to all *other* clients
             self._broadcast(playerNum, message, excludePlayerNum=playerNum)
 
-    def _sendToClients(self, playerNum: int, socket : socketThread) -> None:
+    def _sendToClients(self, playerNum: int, socket : socket.socket) -> None:
         while True:
             self._sendMessageEvents[playerNum].wait()
             self._sendMessageEvents[playerNum].clear()
             while len(self._backlog[playerNum]) > 0:
                 nextMessage = self._backlog[playerNum].pop(0)
-                socket.sendInt(nextMessage[0])
-                socket.sendInt(nextMessage[1])
+                socket.send(nextMessage[0].to_bytes(2))
+                size = sys.getsizeof(nextMessage[1])
+                socket.send(size.to_bytes(2))
+                socket.send(nextMessage[1].to_bytes(size))
 
     # ------------------------------------------------------------------
     # Host: broadcast helper
@@ -233,11 +235,11 @@ class serverConnector:
     # Client: receive loop from host
     # ------------------------------------------------------------------
     def _receiveFromServer(self) -> None:
-        st = self._server_thread
         while True:
             try:
-                sender = st.getInt()  # player id
-                message = st.getInt()     # payload
+                sender = int.from_bytes(self._clientThread.recv(2))
+                size = int.from_bytes(self._clientThread.recv(2))
+                message = int.from_bytes(self._clientThread.recv(size))
             except Exception:
                 return
             with self._incomingLock:
@@ -254,15 +256,15 @@ class serverConnector:
         Host: enqueue locally & broadcast tagged message to all clients.
         Client: send payload to host (host rebroadcasts)."""
         if self.isHost:
-            # Host counts as player 0
-            with self._incomingLock:
-                self._receiveQueues[0].append(message)
-                self._messageOrder.append(0)
-                self._incomingLock.notify_all()
             # Broadcast to all clients
             self._broadcast(0, message, excludePlayerNum=None)
         else:
-            self._server_thread.sendInt(message)
+            sizeBytes = int.to_bytes(sys.getsizeof(message), 2)
+            messageBytes = int.to_bytes(message, sys.getsizeof(message))
+            self._outgoingLock.acquire()
+            self._clientThread.send(sizeBytes)
+            self._clientThread.send(messageBytes)
+            self._outgoingLock.release()
 
     def getInt(self, fromPlayer: int, peek: bool = False) -> int:
         """Return next unread int from a specific player.
