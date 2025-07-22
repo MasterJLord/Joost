@@ -141,8 +141,6 @@ class serverConnector:
         self.lobbySize = lobbySize
         self.myPlayerNum: int = 0 if isHost else -1  # client learns later
 
-        # Per-player unread message queues 
-        self._receiveQueues: List[List[int]] = [[]] * lobbySize
         # Chronological order of unread messages (player_ids)
         self._messageOrder: List[int] = []
         # Conditions protecting the above
@@ -150,6 +148,9 @@ class serverConnector:
         self._outgoingLock = threading.Condition()
 
         if isHost:
+            # Per-player unread message queues 
+            self._receiveQueues: List[List[int]] = [[]] * lobbySize
+
             # List of messages to be sent
             self._backlog: List[List[Tuple[int, int]]] = [[]] * lobbySize
             self._sendMessageEvents = [threading.Event() for _ in range(lobbySize)]
@@ -166,8 +167,12 @@ class serverConnector:
             # Connect to host immediately
             self._clientThread : socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._clientThread.connect(socketInfo)
-            # First int from server is my assigned player number
+            # First ints from server are total players and my player number
+            self.lobbySize = int.from_bytes(self._clientThread.recv(2))
             self.myPlayerNum = int.from_bytes(self._clientThread.recv(2))
+            # Per-player unread message queues 
+            self._receiveQueues: List[List[int]] = [[]] * lobbySize
+
             # Client receive loop
             self._receivingThread = threading.Thread(target=self._receiveFromServer, daemon=True)
             self._receivingThread.start()
@@ -185,6 +190,7 @@ class serverConnector:
             self._player_connections[playerNum] = socket
 
             # Tell the client their player number first thing
+            socket.send(self.lobbySize.to_bytes(2))
             socket.send(playerNum.to_bytes(2))
 
             # Start two threads for this client
