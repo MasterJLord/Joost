@@ -149,17 +149,18 @@ class serverConnector:
 
         if isHost:
             # Per-player unread message queues 
-            self._receiveQueues: List[List[int]] = [[]] * lobbySize
+            self._receiveQueues: List[List[int]] = [[] for i in range(lobbySize)]
 
             # List of messages to be sent
-            self._backlog: List[List[Tuple[int, int]]] = [[]] * lobbySize
-            self._sendMessageEvents = [threading.Event() for _ in range(lobbySize)]
+            self._backlog: List[List[Tuple[int, int]]] = [[] for i in range(lobbySize)]
+            self._sendMessageEvents = [threading.Event() for i in range(lobbySize)]
             # Will hold socketThread per-player index (0 unused for host)
-            self._player_connections: List[Optional[socket.socket]] = [None] * lobbySize
+            self._player_connections: List[Optional[socket.socket]] = [None for i in range(lobbySize)]
 
             # Create listening server socket
             self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._server.bind(socketInfo)
+            self._server.listen()
             # Start accept loop
             self._accept_thread = threading.Thread(target=self._waitForJoiners, daemon=True)
             self._accept_thread.start()
@@ -171,7 +172,7 @@ class serverConnector:
             self.lobbySize = int.from_bytes(self._clientThread.recv(2))
             self.myPlayerNum = int.from_bytes(self._clientThread.recv(2))
             # Per-player unread message queues 
-            self._receiveQueues: List[List[int]] = [[]] * lobbySize
+            self._receiveQueues: List[List[int]] = [[] for i in range(self.lobbySize)]
 
             # Client receive loop
             self._receivingThread = threading.Thread(target=self._receiveFromServer, daemon=True)
@@ -195,7 +196,7 @@ class serverConnector:
 
             # Start two threads for this client
             threading.Thread(target=self._receiveFromClients, args=(playerNum, socket), daemon=True).start()
-            threading.Thread(target=self._sendToClients, args=(playerNum, socket), dameon=True).start()
+            threading.Thread(target=self._sendToClients, args=(playerNum, socket), daemon=True).start()
 
     # ------------------------------------------------------------------
     # Host: receive loop for a single client connection
@@ -214,7 +215,7 @@ class serverConnector:
                 self._messageOrder.append(playerNum)
                 self._incomingLock.notify_all()
             # Broadcast tagged message to all *other* clients
-            self._broadcast(playerNum, message, excludePlayerNum=playerNum)
+            self._broadcast(playerNum, message)
 
     def _sendToClients(self, playerNum: int, socket : socket.socket) -> None:
         while True:
@@ -230,11 +231,11 @@ class serverConnector:
     # ------------------------------------------------------------------
     # Host: broadcast helper
     # ------------------------------------------------------------------
-    def _broadcast(self, playerNum: int, message: int, excludePlayerNum: Optional[int] = None) -> None:
+    def _broadcast(self, playerNum : int, message: int) -> None:
         for i in range(1, self.lobbySize):
-            if i == excludePlayerNum:
+            if i == playerNum:
                 continue
-            self._backlog[i].append(message)
+            self._backlog[i].append((playerNum, message))
             self._sendMessageEvents[i].set()
 
     # ------------------------------------------------------------------
@@ -246,13 +247,13 @@ class serverConnector:
                 sender = int.from_bytes(self._clientThread.recv(2))
                 size = int.from_bytes(self._clientThread.recv(2))
                 message = int.from_bytes(self._clientThread.recv(size))
+                with self._incomingLock:
+                    if 0 <= sender < self.lobbySize:
+                        self._receiveQueues[sender].append(message)
+                        self._messageOrder.append(sender)
+                        self._incomingLock.notify_all()
             except Exception:
                 return
-            with self._incomingLock:
-                if 0 <= sender < self.lobbySize:
-                    self._receiveQueues[sender].append(message)
-                    self._messageOrder.append(sender)
-                    self._incomingLock.notify_all()
 
     # ------------------------------------------------------------------
     # Public API --------------------------------------------------------
@@ -263,7 +264,7 @@ class serverConnector:
         Client: send payload to host (host rebroadcasts)."""
         if self.isHost:
             # Broadcast to all clients
-            self._broadcast(0, message, excludePlayerNum=None)
+            self._broadcast(0, message)
         else:
             sizeBytes = int.to_bytes(sys.getsizeof(message), 2)
             messageBytes = int.to_bytes(message, sys.getsizeof(message))
@@ -296,14 +297,12 @@ class serverConnector:
         with self._incomingLock:
             return [len(q) for q in self._receiveQueues]
 
-    def getNextSender(self, block: bool = True) -> Optional[int]:
+    def getNextSender(self, block: bool = True) -> int:
         """Return player_id of earliest unread message (chronological).
         If block=False and none available, return None."""
         with self._incomingLock:
             while block and not self._messageOrder:
                 self._incomingLock.wait()
-            if not self._messageOrder:
-                return None
             return self._messageOrder[0]
 
     def isServer(self) -> bool:
