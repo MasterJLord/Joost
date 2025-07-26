@@ -1,6 +1,6 @@
-from mainMenu import *
-from playingFunc import *
-from lobby import *
+from mainMenu import mainMenuFrame
+from playingFunc import playingFrame
+from lobby import lobbyFrame
 from writer import Writer
 import pygame
 
@@ -9,13 +9,14 @@ clock = pygame.time.Clock()
 
 mode = mainMenuFrame
 
+
 gameState = {
     "clock": pygame.time.Clock(),
-    "finalscreen": pygame.display.set_mode()
+    "finalScreen": pygame.display.set_mode()
 }
-gameState["intermediatescreen"] = pygame.Surface((gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height()), pygame.SRCALPHA)
+gameState["screen"] = pygame.Surface((gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height()), pygame.SRCALPHA)
     
-Writer.initializeWriter(5, gameState["finalscreen"].getHeight())
+Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
 while True:
     events = pygame.event.get()

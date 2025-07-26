@@ -3,11 +3,11 @@ import pygame
 class Writer():
 
     @staticmethod
-    def initializeWriter(resolution : int, screenHeight : int):
+    def initializeWriter(resolution : int, screenSize : tuple):
         Writer.FontResolution = resolution
         Writer.TextColor = (255, 255, 255)
         Writer.screenSize = screenSize
-        Writer.DefaultFont = pygame.font.SysFont("moderno20", int(screenHeight*Writer.FontResolution/100))
+        Writer.DefaultFont = pygame.font.SysFont("moderno20", int(screenSize[1]*Writer.FontResolution/100))
         Writer.LetterHeight = Writer.DefaultFont.render("fj", True, Writer.TextColor).get_height()
 
 

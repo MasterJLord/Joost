@@ -1,11 +1,18 @@
 from socketThread import *
 import pygame
+import typing
 
-def mainMenuFrame(events : list[pygame.Event], gameState : dict) -> tuple[dict, pygame.Display, function]:
-    return _mainMenuFrame(events, gameState)
+def test():
+    print("2")
 
-def lobbyFrame(events : list[pygame.Event], gameState : dict) -> tuple[dict, pygame.Display, function]:
-    return _lobbyFrame(events, gameState)
+def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, typing.Callable]:
+    pass
 
-def playingFrame(events : list[pygame.Event], gameState : dict) -> tuple[dict, pygame.Display, function]:
-    return _playingFrame(events, gameState)
+def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, typing.Callable]:
+    pass
+
+def playingFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, typing.Callable]:
+    pass
+
+
+forwardDeclarationsDone = None
