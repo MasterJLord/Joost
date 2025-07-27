@@ -1,14 +1,18 @@
-from mainMenu import mainMenuFrame
-from playingFunc import playingFrame
-from lobby import lobbyFrame
+from mainMenu import *
+from playingFunc import *
+from lobby import *
 from writer import Writer
-import pygame
+import sys
 
 pygame.init()
 clock = pygame.time.Clock()
 
-mode = mainMenuFrame
-
+mode = "MainMenu"
+functionDict = {
+    "MainMenu": mainMenuFrame,
+    "Lobby": lobbyFrame,
+    "Playing": playingFrame
+}
 
 gameState = {
     "clock": pygame.time.Clock(),
@@ -24,7 +28,8 @@ while True:
         if e.type == pygame.QUIT:
             sys.exit()
 
-    (gameState, screen, mode) = mode(events, gameState)
+    # TODO : make sure returning gamestate is unnecessary here
+    (gameState, mode) = functionDict[mode](events, gameState)
 
-
+    gameState["finalScreen"].blit(gameState["screen"], (0, 0))
     pygame.display.update()

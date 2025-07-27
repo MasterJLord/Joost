@@ -1,4 +1,4 @@
-import pygame
+import pygame, math
 
 class Writer():
 
@@ -56,4 +56,4 @@ class Writer():
                 height = 1
         # Scales text to size parameter and returns it
         XToYRatio = text.get_width()/(Writer.LetterHeight)
-        return pygame.transform.scale(text, (math.ceil(size*screenSize[1]*XToYRatio/100), math.ceil(size*screenSize[1]*height/100)))
+        return pygame.transform.scale(text, (math.ceil(size*Writer.screenSize[1]*XToYRatio/100), math.ceil(size*Writer.screenSize[1]*height/100)))

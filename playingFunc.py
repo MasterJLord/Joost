@@ -1,8 +1,5 @@
-try:
-    check = forwardDeclarationsDone
-except NameError:
-    from forwardDeclarations import *
+import pygame, typing
+from socketThread import *
 
-
-def _playingFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, typing.Callable]:
+def playingFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
     pass
