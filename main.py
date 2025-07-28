@@ -1,6 +1,7 @@
 from mainMenu import *
 from playingFunc import *
 from lobby import *
+from countdown import *
 from writer import Writer
 import sys
 
@@ -11,6 +12,7 @@ mode = "MainMenu"
 functionDict = {
     "MainMenu": mainMenuFrame,
     "Lobby": lobbyFrame,
+    "Countdown": countdownFrame,
     "Playing": playingFrame
 }
 
@@ -29,7 +31,7 @@ while True:
             sys.exit()
 
     # TODO : make sure returning gamestate is unnecessary here
-    (gameState, mode) = functionDict[mode](events, gameState)
+    mode = functionDict[mode](events, gameState)
 
     gameState["finalScreen"].blit(gameState["screen"], (0, 0))
     pygame.display.update()

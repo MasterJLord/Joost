@@ -20,6 +20,6 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[
             gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
             gameState["playerColors"] = [i + (i%2) * 10 for i in range(6)]
             gameState["players"] = [playerBall(gameState["playerColors"][i], 10, 20, (0, 0), (0, 0), 10) for i in range(6)]
-            return (gameState, "Lobby")
-    return (gameState, "MainMenu")
+            return "Lobby"
+    return "MainMenu"
         

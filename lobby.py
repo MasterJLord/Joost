@@ -2,6 +2,7 @@ import pygame, typing
 from socketThread import *
 from teamColors import teamColors
 from writer import Writer
+from time import time
 
 
 def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
@@ -17,7 +18,8 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
             elif option == 2:
                 gameState["playerColors"][p] = (gameState["playerColors"][p] + 10) % 20
             elif option == 0 and p == 0:
-                return (gameState, "Playing")
+                gameState["gameStartTime"] = gameState["lobby"].getInt(0)
+                return "Countdown"
             gameState["players"][p].color = teamColors[gameState["playerColors"][p]]
 
     for e in events:
@@ -25,7 +27,9 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
         if e.type == pygame.MOUSEBUTTONDOWN:
             if gameState["myPlayerNum"] == 0 and e.pos[1] > gameState["screen"].get_height() * 0.9:
                 gameState["lobby"].sendInt(0)
-                return (gameState, "Playing")
+                gameState["gameStartTime"] = int(time() * 1000) + 3000
+                gameState["lobby"].sendInt(gameState["gameStartTime"])
+                return "Countdown"
             # Changes your color
             if (e.pos[0] < gameState["screen"].get_width()/2) != (gameState["playerColors"][gameState["myPlayerNum"]] < 10):
                 gameState["lobby"].sendInt(1)
@@ -46,4 +50,4 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
     for p in range(6):
         pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screen"].get_width() * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.0475 * gameState["screen"].get_height(), gameState["screen"].get_height() * (0.1025 + 0.1 * p)), 0.045 * gameState["screen"].get_height())
 
-    return (gameState, "Lobby")
+    return "Lobby"
