@@ -25,13 +25,13 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
     for e in events:
         # Starts the game
         if e.type == pygame.MOUSEBUTTONDOWN:
-            if gameState["myPlayerNum"] == 0 and e.pos[1] > gameState["screen"].get_height() * 0.9:
+            if gameState["myPlayerNum"] == 0 and e.pos[1] > gameState["screenSize"][1] * 0.9:
                 gameState["lobby"].sendInt(0)
                 gameState["gameStartTime"] = int(time() * 1000) + 3000
                 gameState["lobby"].sendInt(gameState["gameStartTime"])
                 return "Countdown"
             # Changes your color
-            if (e.pos[0] < gameState["screen"].get_width()/2) != (gameState["playerColors"][gameState["myPlayerNum"]] < 10):
+            if (e.pos[0] < gameState["screenSize"][0]/2) != (gameState["playerColors"][gameState["myPlayerNum"]] < 10):
                 gameState["lobby"].sendInt(1)
                 if gameState["playerColors"][gameState["myPlayerNum"]] % 10 == 9:
                     gameState["playerColors"][gameState["myPlayerNum"]] -= 9
@@ -44,10 +44,10 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
 
                 
     gameState["screen"].fill((0, 0, 0))
-    pygame.draw.circle(gameState["screen"], (0, 130, 0), (gameState["screen"].get_width() * (0.35 if gameState["playerColors"][gameState["myPlayerNum"]] > 9 else 0.65) - 0.05 * gameState["screen"].get_height(), gameState["screen"].get_height() * (0.1 + 0.1 * gameState["myPlayerNum"])), 0.05 * gameState["screen"].get_height())
+    pygame.draw.circle(gameState["screen"], (0, 130, 0), (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][gameState["myPlayerNum"]] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1 + 0.1 * gameState["myPlayerNum"])), 0.05 * gameState["screenSize"][1])
     startWord = Writer.Write(15, "Start Game", color = (255, 255, 255) if gameState["myPlayerNum"] == 0 else (90, 85, 85))
-    gameState["screen"].blit(startWord, (gameState["screen"].get_width() / 2 - startWord.get_width()/2, gameState["screen"].get_height() * 0.825))
+    gameState["screen"].blit(startWord, (gameState["screenSize"][0] / 2 - startWord.get_width()/2, gameState["screenSize"][1] * 0.825))
     for p in range(6):
-        pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screen"].get_width() * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.0475 * gameState["screen"].get_height(), gameState["screen"].get_height() * (0.1025 + 0.1 * p)), 0.045 * gameState["screen"].get_height())
+        pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.0475 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1025 + 0.1 * p)), 0.045 * gameState["screenSize"][1])
 
     return "Lobby"
