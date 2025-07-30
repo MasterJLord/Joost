@@ -32,7 +32,6 @@ while True:
         if e.type == pygame.QUIT:
             sys.exit()
 
-    # TODO : make sure returning gamestate is unnecessary here
     mode = functionDict[mode](events, gameState)
 
     gameState["finalScreen"].blit(gameState["screen"], (0, 0))

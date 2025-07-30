@@ -17,5 +17,5 @@ def renderScreen(gameState : dict) -> None:
     else:
         leftOffset = gameState["players"][gameState["myPlayerNum"]].position[0] - screenWidth/2
     for b in gameState["balls"]:
-        print(((b.position[0] - leftOffset) - onePercentPixels, (100 - b.position[1]) * onePercentPixels))
-        pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) - onePercentPixels, (100 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
+        print(((b.position[0] - leftOffset) * onePercentPixels, (100 - b.position[1]) * onePercentPixels))
+        pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (100 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
