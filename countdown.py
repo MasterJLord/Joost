@@ -1,14 +1,15 @@
 from writer import Writer
 import pygame
 from time import time
-from math import floor
+from playingFunc import renderScreen
+from math import ceil
 
 def countdownFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
-    gameState["screen"].fill((0, 0, 0))
+    renderScreen(gameState)
     tim = int(time() * 1000)
     if tim > gameState["gameStartTime"]:
         return "Playing"
-    timer = floor((gameState["gameStartTime"] - tim)/1000)
+    timer = ceil((gameState["gameStartTime"] - tim)/1000)
     text = Writer.Write(25, str(timer))
     gameState["screen"].blit(text, (gameState["screenSize"][0]/2-text.get_width()/2, gameState["screenSize"][1]/2-text.get_height()/2))
     return "Countdown"

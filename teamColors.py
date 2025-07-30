@@ -23,3 +23,5 @@ teamColors = [
     pygame.Color("yellowgreen"),
     pygame.Color("orange")
 ]
+
+TEAM_COLORS_NUM = len(teamColors) / 2

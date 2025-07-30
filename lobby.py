@@ -1,10 +1,12 @@
 import pygame, typing
 from socketThread import *
-from teamColors import teamColors
+from teamColors import *
 from writer import Writer
 from time import time
+from balls import *
 
 
+# TODO: remove magic numbers (low priority)
 def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
     # Makes sure events are synced across all players' machines
     for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(6)):
@@ -22,8 +24,8 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
             #0: start game
             elif option == 0 and p == 0:
                 gameState["gameStartTime"] = gameState["lobby"].getInt(0)
+                setupBalls(gameState)
                 return "Countdown"
-            gameState["players"][p].color = teamColors[gameState["playerColors"][p]]
 
     for e in events:
         # Starts the game
@@ -32,6 +34,7 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
                 gameState["lobby"].sendInt(0)
                 gameState["gameStartTime"] = int(time() * 1000) + 3000
                 gameState["lobby"].sendInt(gameState["gameStartTime"])
+                setupBalls(gameState)
                 return "Countdown"
             elif (e.pos[0] < gameState["screenSize"][0]/2) != (gameState["playerColors"][gameState["myPlayerNum"]] < 10):
                 gameState["lobby"].sendInt(1)
@@ -42,7 +45,6 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
             else:
                 gameState["lobby"].sendInt(2)
                 gameState["playerColors"][gameState["myPlayerNum"]] = (gameState["playerColors"][gameState["myPlayerNum"]] + 10) % 20
-            gameState["players"][p].color = teamColors[gameState["playerColors"][p]]
 
                 
     gameState["screen"].fill((0, 0, 0))
@@ -54,3 +56,29 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
             pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.0475 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1025 + 0.1 * p)), 0.045 * gameState["screenSize"][1])
 
     return "Lobby"
+
+
+def setupBalls(gameState):
+    team0 = 0
+    team1 = 0
+    for p in gameState["playerColors"]:
+        if -1 < p < TEAM_COLORS_NUM:
+            team0 += 1
+        elif TEAM_COLORS_NUM <= p:
+            team1 += 1
+    spacing0 = 100 / (team0 + 1)
+    spacing1 = 100 / (team1 + 1)
+    team0 = 0
+    team1 = 0
+    gameState["players"] = []
+    for p in gameState["playerColors"]:
+        if -1 < p < TEAM_COLORS_NUM:
+            team0 += 1
+            gameState["players"].append(playerBall(teamColors[p], 3, 20, (gameState["boardWidth"] * 0.85, spacing0 * team0), (0, 0), (0, 0), 0.6))
+        elif TEAM_COLORS_NUM <= p:
+            team1 += 1
+            gameState["players"].append(playerBall(teamColors[p], 3, 20, (gameState["boardWidth"] * 0.15, spacing1 * team1), (0, 0), (0, 0), 0.6))
+
+
+    gameState["balls"] = [i for i in gameState["players"]]
+    gameState["balls"].append(goalBall((0, 130, 0), 4, 30, (gameState["boardWidth"] * 0.5, 50), (0, 0), (0, 0), 0.6))
