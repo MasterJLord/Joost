@@ -19,7 +19,6 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[
             gameState["lobby"] = serverConnector(("localhost", 20422), isHost, 4)
             gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
             gameState["playerColors"] = [-20 for i in range(6)]
-            gameState["playerColors"][gameState["myPlayerNum"]] = 10
             gameState["lobby"].sendInt(2)
             return "Lobby"
     return "MainMenu"

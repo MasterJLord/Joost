@@ -34,18 +34,10 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
                 gameState["lobby"].sendInt(0)
                 gameState["gameStartTime"] = int(time() * 1000) + 3000
                 gameState["lobby"].sendInt(gameState["gameStartTime"])
-                setupBalls(gameState)
-                return "Countdown"
             elif (e.pos[0] < gameState["screenSize"][0]/2) != (gameState["playerColors"][gameState["myPlayerNum"]] < 10):
                 gameState["lobby"].sendInt(1)
-                if gameState["playerColors"][gameState["myPlayerNum"]] % 10 == 9:
-                    gameState["playerColors"][gameState["myPlayerNum"]] -= 9
-                else:
-                    gameState["playerColors"][gameState["myPlayerNum"]] += 1
             else:
                 gameState["lobby"].sendInt(2)
-                gameState["playerColors"][gameState["myPlayerNum"]] = (gameState["playerColors"][gameState["myPlayerNum"]] + 10) % 20
-
                 
     gameState["screen"].fill((0, 0, 0))
     pygame.draw.circle(gameState["screen"], (0, 130, 0), (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][gameState["myPlayerNum"]] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1 + 0.1 * gameState["myPlayerNum"])), 0.05 * gameState["screenSize"][1])

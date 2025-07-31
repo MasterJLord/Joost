@@ -258,7 +258,7 @@ class serverConnector:
     # ------------------------------------------------------------------
     # Public API --------------------------------------------------------
     # ------------------------------------------------------------------
-    def sendInt(self, message: int) -> None:
+    def sendInt(self, message: int, echo : bool = True) -> None:
         """Send an int from *this* player.
         Host: enqueue locally & broadcast tagged message to all clients.
         Client: send payload to host (host rebroadcasts)."""
@@ -272,6 +272,12 @@ class serverConnector:
             self._clientThread.send(sizeBytes)
             self._clientThread.send(messageBytes)
             self._outgoingLock.release()
+        if echo:
+            with self._incomingLock:
+                self._receiveQueues[self.myPlayerNum].append(message)
+                self._messageOrder.append(self.myPlayerNum)
+                self._incomingLock.notify_all()
+
 
     def getInt(self, fromPlayer: int, peek: bool = False) -> int:
         """Return next unread int from a specific player.
