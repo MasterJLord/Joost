@@ -72,5 +72,5 @@ def setupBalls(gameState):
             gameState["players"].append(playerBall(teamColors[p], 3, 20, (gameState["boardWidth"] * 0.15, spacing1 * team1), (0, 0), (0, 0), 0.6))
 
 
-    gameState["balls"] = [i for i in gameState["players"]]
+    gameState["balls"] = []
     gameState["balls"].append(goalBall((0, 130, 0), 4, 30, (gameState["boardWidth"] * 0.5, 50), (0, 0), (0, 0), 0.6))
