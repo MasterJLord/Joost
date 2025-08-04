@@ -18,6 +18,7 @@ class ball:
 
     def checkWallCollisions(self, stageWidth : int, deltaTime : int):
         firstCollision = deltaTime + 1
+        
 
         # TODO : figure out what to return for the soccer ball
         if (firstCollision > deltaTime):
