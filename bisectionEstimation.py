@@ -1,7 +1,8 @@
 import math
 
-# TODO : figure out if lambdas would improve this
-def bisectionEstimation(expression, startPoints : tuple[int, int], tolerance : float):
+# TODO : use secant estimation
+# TODO : figure out if lambdas would be relevant
+def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float):
     startValue0 = expression(startPoints[0])
     startValue1 = expression(startPoints[1])
     if startValue0 == 0:
@@ -34,9 +35,3 @@ def bisectionEstimation(expression, startPoints : tuple[int, int], tolerance : f
             positivePoint = newPoint
         else:
             negativePoint = newPoint
-
-def testfunction(x):
-    return x + 8 - math.exp(x)
-
-temp = bisectionEstimation(testfunction, (-1, 8.1), 1)
-temp = 0
