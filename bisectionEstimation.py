@@ -1,6 +1,5 @@
 import math
 
-# TODO : use secant estimation
 # TODO : figure out if lambdas would be relevant
 def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float):
     startValue0 = expression(startPoints[0])
@@ -13,19 +12,20 @@ def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float)
         if startValue1 > 0:
             raise Exception("Starting points did not surround a zero of the function")
         negativePoint = startPoints[1]
-        negativeValue = startValue1
+        # negativeValue = startValue1
         positivePoint = startPoints[0]
-        positiveValue = startValue0
+        # positiveValue = startValue0
     else:
         if startValue1 < 0:
             raise Exception("Starting points did not surround a zero of the function")
         negativePoint = startPoints[0]
-        negativeValue = startValue0
+        # negativeValue = startValue0
         positivePoint = startPoints[1]
-        positiveValue = startValue1
+        # positiveValue = startValue1
     while True:
         newPoint = (negativePoint + positivePoint) / 2
-        temp = abs(positivePoint - negativePoint)
+        # newPoint = negativePoint - negativeValue * ((positivePoint - negativePoint) / (positiveValue - negativeValue))
+        print(newPoint)
         if abs(positivePoint - negativePoint) < tolerance * 2:
             return newPoint
         newValue = expression(newPoint)
@@ -33,5 +33,7 @@ def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float)
             return newPoint
         if newValue > 0:
             positivePoint = newPoint
+            # positiveValue = newValue
         else:
             negativePoint = newPoint
+            # negativeValue = newValue
