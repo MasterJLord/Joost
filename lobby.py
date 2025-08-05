@@ -23,7 +23,11 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
                 gameState["playerColors"][p] = (gameState["playerColors"][p] + 10) % 20
             #0: start game
             elif option == 0 and p == 0:
-                gameState["gameStartTime"] = gameState["lobby"].getInt(0)
+                gameStartTimeWorld = gameState["lobby"].getInt(0)
+                currentWorldTime = int(time() * 1000)
+                currentTime = pygame.time.get_ticks()
+                gameState["gameStartTime"] = currentTime + gameStartTimeWorld - currentWorldTime
+
                 setupBalls(gameState)
                 return "Countdown"
 
