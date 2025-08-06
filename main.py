@@ -1,3 +1,4 @@
+from eventHarvester import *
 from mainMenu import *
 from playingFunc import *
 from lobby import *
@@ -26,9 +27,14 @@ gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
     
 Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
+# Creates a thread to receive events as fast as possible and timestamp with the precise time they are received
+eventHarvester = eventHarvester()
+
+
 while True:
-    events = pygame.event.get()
+    events = eventHarvester.getEvents()
     for e in events:
+        print(e.type)
         if e.type == pygame.QUIT:
             sys.exit()
 
