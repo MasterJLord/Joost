@@ -10,14 +10,14 @@ def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float)
         return startPoints[1]
     if startValue0 > 0:
         if startValue1 > 0:
-            raise Exception("Starting points did not surround a zero of the function")
+            raise ValueError("Starting points did not surround a zero of the function")
         negativePoint = startPoints[1]
         # negativeValue = startValue1
         positivePoint = startPoints[0]
         # positiveValue = startValue0
     else:
         if startValue1 < 0:
-            raise Exception("Starting points did not surround a zero of the function")
+            raise ValueError("Starting points did not surround a zero of the function")
         negativePoint = startPoints[0]
         # negativeValue = startValue0
         positivePoint = startPoints[1]
