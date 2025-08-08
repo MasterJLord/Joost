@@ -107,6 +107,15 @@ class playerBall:
 
     def __init__(self, *args, **kwargs):
         self.ball = ball(*args, **kwargs)
+                
+        self.color = self.ball.color
+        self.radius = self.ball.radius
+        self.mass = self.ball.mass
+        self.position = self.ball.position
+        self.velocity = self.ball.velocity
+        self.acceleration = self.ball.acceleration
+        self.drag = self.ball.drag
+
 
     def moveRight(self):
         self.ball.acceleration[0] = playerBall.moveSpeed
@@ -139,6 +148,14 @@ class playerBall:
 class goalBall:
     def __init__(self, *args, **kwargs):
         self.ball = ball(*args, **kwargs)
+
+        self.color = self.ball.color
+        self.radius = self.ball.radius
+        self.mass = self.ball.mass
+        self.position = self.ball.position
+        self.velocity = self.ball.velocity
+        self.acceleration = self.ball.acceleration
+        self.drag = self.ball.drag
 
     def predictX(self, deltaTime):
         return self.ball.predictX(deltaTime)

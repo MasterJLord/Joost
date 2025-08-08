@@ -7,7 +7,9 @@ from writer import Writer
 import sys
 
 pygame.init()
-clock = pygame.time.Clock()
+
+# Creates a thread to receive events as fast as possible and timestamp with the precise time they are received
+eventHarvester = eventHarvester()
 
 mode = "MainMenu"
 functionDict = {
@@ -19,7 +21,7 @@ functionDict = {
 
 gameState = {
     "clock": pygame.time.Clock(),
-    "finalScreen": pygame.display.set_mode(),
+    "finalScreen": pygame.display.get_surface(),
     "boardWidth": 300
 }
 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
@@ -27,8 +29,6 @@ gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
     
 Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
-# Creates a thread to receive events as fast as possible and timestamp with the precise time they are received
-eventHarvester = eventHarvester()
 
 
 while True:

@@ -3,10 +3,7 @@ from balls import *
 from socketThread import *
 
 def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
-    """
-    if safeTime > savedTime:
-        (gameOver, gameState[""], gameState[""])
-    """
+
     traverse(gameState, )
     renderScreen(gameState)
     return "Playing"

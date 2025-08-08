@@ -9,6 +9,7 @@ class eventHarvester:
         threading.Thread(target=self.__harvestEvents, daemon=True).start()
 
     def __harvestEvents(self):
+        pygame.display.set_mode()
         while True:
             if len(self.tempQueue) > 0:
                 if self.lock.acquire(blocking=False):
