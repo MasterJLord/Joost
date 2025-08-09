@@ -3,6 +3,27 @@ from balls import *
 from socketThread import *
 
 def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
+    for e in events:
+        if e.type == pygame.KEYDOWN:
+            action = gameState["keybinds"].get(e.key, None)
+            if action == "up":
+                gameState["lobby"].sendInt(10)
+                gameState["lobby"].sendInt(e.time)
+            elif action == "left":
+                gameState["lobby"].sendInt(-1)
+                gameState["lobby"].sendInt(e.time)
+                gameState["movingDirection"] = "left"
+            elif action == "right":
+                gameState["lobby"].sendInt(1)
+                gameState["lobby"].sendInt(e.time)
+                gameState["movingDirection"] = "right"
+        elif e.type == pygame.KEYUP:
+            action = gameState["keybinds"].get(e.key, None)
+            if action == gameState["movingDirection"]:
+                gameState["lobby"].sendInt(0)
+                gameState["movingDirection"] = None
+
+
 
     traverse(gameState, )
     renderScreen(gameState)

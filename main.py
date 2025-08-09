@@ -22,7 +22,15 @@ functionDict = {
 gameState = {
     "clock": pygame.time.Clock(),
     "finalScreen": pygame.display.get_surface(),
-    "boardWidth": 300
+    "boardWidth": 300,
+    "keybinds": {
+        pygame.K_UP: "up",
+        pygame.K_w: "up",
+        pygame.K_LEFT: "left",
+        pygame.K_a: "left",
+        pygame.K_RIGHT: "right",
+        pygame.K_d: "right"
+    }
 }
 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)

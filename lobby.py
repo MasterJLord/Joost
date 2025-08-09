@@ -28,7 +28,7 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
                 currentTime = pygame.time.get_ticks()
                 gameState["gameStartTime"] = currentTime + gameStartTimeWorld - currentWorldTime
 
-                setupBalls(gameState)
+                setupGame(gameState)
                 return "Countdown"
 
     for e in events:
@@ -54,7 +54,8 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
     return "Lobby"
 
 
-def setupBalls(gameState):
+def setupGame(gameState):
+    # Set up balls
     team0 = 0
     team1 = 0
     for p in gameState["playerColors"]:
@@ -78,3 +79,7 @@ def setupBalls(gameState):
 
     gameState["balls"] = []
     gameState["balls"].append(goalBall((0, 130, 0), 4, 30, (gameState["boardWidth"] * 0.5, 50), (0, 0), (0, 0), 0.6))
+
+
+    # Do other required pregame settup
+    gameState["movingDirection"] = None
