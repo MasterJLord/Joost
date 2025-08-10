@@ -83,3 +83,6 @@ def setupGame(gameState):
 
     # Do other required pregame settup
     gameState["movingDirection"] = None
+    gameState["lastCheckupTime"] = gameState["gameStartTime"]
+    gameState["savedTime"] = gameState["gameStartTime"]
+    gameState["playerLastCheckups"] = [gameState["gameStartTime"] for i in range(team0 + team1)]

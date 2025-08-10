@@ -41,12 +41,14 @@ Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["fi
 
 while True:
     events = eventHarvester.getEvents()
+
+    mode = functionDict[mode](events, gameState)
+
     for e in events:
         print(e.type)
         if e.type == pygame.QUIT:
             sys.exit()
 
-    mode = functionDict[mode](events, gameState)
 
     gameState["finalScreen"].blit(gameState["screen"], (0, 0))
     pygame.display.update()

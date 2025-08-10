@@ -2,27 +2,58 @@ import pygame, typing
 from balls import *
 from socketThread import *
 
+CHECKUP_INTERVAL = 1000
+ACTION_CODES = {
+    "stop" : 0,
+    "left" : -1,
+    "right" : 1,
+    "up" : 2,
+    "checkin" : -2,
+    "quit" : 99
+}
+ACTION_CODES_REVERSED = {b : a for (a, b) in ACTION_CODES.items()}
+
 def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     for e in events:
+        if e.type == pygame.QUIT:
+            gameState["lobby"].sendInt(ACTION_CODES["quit"])
+            gameState["lobby"].sendInt(0)
         if e.type == pygame.KEYDOWN:
             action = gameState["keybinds"].get(e.key, None)
             if action == "up":
-                gameState["lobby"].sendInt(10)
-                gameState["lobby"].sendInt(e.time)
+                gameState["lobby"].sendInt(ACTION_CODES["up"])
+                gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
+                gameState["lastCheckupTime"] = e.time
             elif action == "left":
-                gameState["lobby"].sendInt(-1)
-                gameState["lobby"].sendInt(e.time)
+                gameState["lobby"].sendInt(ACTION_CODES["left"])
+                gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
+                gameState["lastCheckupTime"] = e.time
                 gameState["movingDirection"] = "left"
             elif action == "right":
-                gameState["lobby"].sendInt(1)
-                gameState["lobby"].sendInt(e.time)
+                gameState["lobby"].sendInt(ACTION_CODES["right"])
+                gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
+                gameState["lastCheckupTime"] = e.time
                 gameState["movingDirection"] = "right"
         elif e.type == pygame.KEYUP:
             action = gameState["keybinds"].get(e.key, None)
             if action == gameState["movingDirection"]:
-                gameState["lobby"].sendInt(0)
+                gameState["lobby"].sendInt(ACTION_CODES["stop"])
+                gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
+                gameState["lastCheckupTime"] = e.time
                 gameState["movingDirection"] = None
+    if pygame.time.get_ticks() > gameState["lastCheckupTime"] + CHECKUP_INTERVAL:
+        gameState["lobby"].sendInt(ACTION_CODES["checkin"])
+        gameState["lobby"].sendInt(pygame.time.get_ticks() - gameState["gameStartTime"])
+        gameState["lastCheckupTime"] = pygame.time.get_ticks()
 
+    for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(6)):
+        for m, t in range(n):
+            option = gameState["lobby"].getInt(p)
+            time = gameState["lobby"].getInt(p)
+            if ACTION_CODES_REVERSED[option] == "quit":
+                gameState["playerLastCheckups"][p] = float("inf")
+            else:
+                gameState["playerLastCheckups"][p] = time
 
 
     traverse(gameState, )
