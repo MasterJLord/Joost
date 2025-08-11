@@ -1,42 +1,47 @@
 import pygame, math, typing
-from bisectionEstimation import rootEstimation
+from bisectionEstimation import binaryEstimation
 
 class ball:
-    def __init__(self, color : pygame.color, radius : int, mass : int, position: list, velocity : list, acceleration : list, drag : int):
+    drag = 0
+
+    @staticmethod
+    def changeDrag(newDrag : int):
+        ball.drag = newDrag
+
+    def __init__(self, color : pygame.color, radius : int, mass : int, position: list, velocity : list, acceleration : list):
         self.color = color
         self.radius = radius
         self.mass = mass
         self.position = position
         self.velocity = velocity
         self.acceleration = acceleration
-        self.drag = drag
 
     def predictX(self, deltaTime : int):
-        return self.position[0] + (self.acceleration[0] * deltaTime / self.drag) + (self.velocity[0]/self.drag - self.acceleration[0]/(math.pow(self.drag, 2))) * (1 - math.exp(-1 * self.drag * deltaTime))
+        return self.position[0] + (self.acceleration[0] * deltaTime / ball.drag) + (self.velocity[0]/ball.drag - self.acceleration[0]/(math.pow(ball.drag, 2))) * (1 - math.exp(-1 * ball.drag * deltaTime))
     
     def predictY(self, deltaTime : int):
-        return self.position[1] + (self.acceleration[1] * deltaTime / self.drag) + (self.velocity[1]/self.drag - self.acceleration[1]/(math.pow(self.drag, 2))) * (1 - math.exp(-1 * self.drag * deltaTime))
+        return self.position[1] + (self.acceleration[1] * deltaTime / ball.drag) + (self.velocity[1]/ball.drag - self.acceleration[1]/(math.pow(ball.drag, 2))) * (1 - math.exp(-1 * ball.drag * deltaTime))
 
     def move(self, deltaTime : int):
         self.position[0] = self.predictX(deltaTime)
         self.position[1] = self.predictY(deltaTime)
-        self.velocity[0] = self.acceleration[0] / self.drag + (self.velocity[0] - self.acceleration[0] / self.drag) * math.pow(-1 * self.drag * deltaTime)
-        self.velocity[1] = self.acceleration[1] / self.drag + (self.velocity[1] - self.acceleration[1] / self.drag) * math.pow(-1 * self.drag * deltaTime)
+        self.velocity[0] = self.acceleration[0] / ball.drag + (self.velocity[0] - self.acceleration[0] / ball.drag) * math.pow(-1 * ball.drag * deltaTime)
+        self.velocity[1] = self.acceleration[1] / ball.drag + (self.velocity[1] - self.acceleration[1] / ball.drag) * math.pow(-1 * ball.drag * deltaTime)
 
     def checkWallCollisions(self, stageWidth : int, deltaTime : int):
         firstCollision = deltaTime + 1
 
         if self.acceleration[0] <= 0:
             try:
-                leftWallCollisionTime = int(rootEstimation(lambda x : self.predictX(x) - self.radius, (0, deltaTime), 0.5))
+                leftWallCollisionTime = int(binaryEstimation(lambda x : self.predictX(x) - self.radius, (0, deltaTime), 0.5))
                 if leftWallCollisionTime < firstCollision:
                     firstCollision = leftWallCollisionTime
             except ValueError:
                 pass
         elif self.velocity[0] < 0:
-            minimumPointTime = math.log((1 - self.velocity[0] * self.drag / self.acceleration[0])) / self.drag
+            minimumPointTime = math.log((1 - self.velocity[0] * ball.drag / self.acceleration[0])) / ball.drag
             try:
-                leftWallCollisionTime = int(rootEstimation(lambda x : self.predictX(x) - self.radius, (0, minimumPointTime), 0.5))
+                leftWallCollisionTime = int(binaryEstimation(lambda x : self.predictX(x) - self.radius, (0, minimumPointTime), 0.5))
                 if leftWallCollisionTime < firstCollision:
                     firstCollision = leftWallCollisionTime
             except ValueError:
@@ -44,15 +49,15 @@ class ball:
 
         if self.acceleration[0] >= 0:
             try:
-                rightWallCollisionTime = int(rootEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, deltaTime), 0.5))
+                rightWallCollisionTime = int(binaryEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, deltaTime), 0.5))
                 if rightWallCollisionTime < firstCollision:
                     firstCollision = rightWallCollisionTime
             except ValueError:
                 pass
         elif self.velocity[0] < 0:
-            maximumPointTime = math.log((1 - self.velocity[0] * self.drag / self.acceleration[0])) / self.drag
+            maximumPointTime = math.log((1 - self.velocity[0] * ball.drag / self.acceleration[0])) / ball.drag
             try:
-                rightWallCollisionTime = int(rootEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, maximumPointTime), 0.5))
+                rightWallCollisionTime = int(binaryEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, maximumPointTime), 0.5))
                 if rightWallCollisionTime < firstCollision:
                     firstCollision = rightWallCollisionTime
             except ValueError:
@@ -60,15 +65,15 @@ class ball:
 
         if self.acceleration[1] <= 0:
             try:
-                floorCollisionTime = int(rootEstimation(lambda x : self.predictY(x) - self.radius, (0, deltaTime), 0.5))
+                floorCollisionTime = int(binaryEstimation(lambda x : self.predictY(x) - self.radius, (0, deltaTime), 0.5))
                 if floorCollisionTime < firstCollision:
                     firstCollision = floorCollisionTime
             except ValueError:
                 pass
         elif self.velocity[1] < 0:
-            minimumPointTime = math.log((1 - self.velocity[1] * self.drag / self.acceleration[1])) / self.drag
+            minimumPointTime = math.log((1 - self.velocity[1] * ball.drag / self.acceleration[1])) / ball.drag
             try:
-                floorCollisionTime = int(rootEstimation(lambda x : self.predictY(x) - self.radius, (0, minimumPointTime), 0.5))
+                floorCollisionTime = int(binaryEstimation(lambda x : self.predictY(x) - self.radius, (0, minimumPointTime), 0.5))
                 if floorCollisionTime < firstCollision:
                     firstCollision = floorCollisionTime
             except ValueError:
@@ -76,15 +81,15 @@ class ball:
 
         if self.acceleration[1] >= 0:
             try:
-                ceilingCollisionTime = int(rootEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, deltaTime), 0.5))
+                ceilingCollisionTime = int(binaryEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, deltaTime), 0.5))
                 if ceilingCollisionTime < firstCollision:
                     firstCollision = ceilingCollisionTime
             except ValueError:
                 pass
         elif self.velocity[1] < 0:
-            maximumPointTime = math.log((1 - self.velocity[1] * self.drag / self.acceleration[1])) / self.drag
+            maximumPointTime = math.log((1 - self.velocity[1] * ball.drag / self.acceleration[1])) / ball.drag
             try:
-                ceilingCollisionTime = int(rootEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, maximumPointTime), 0.5))
+                ceilingCollisionTime = int(binaryEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, maximumPointTime), 0.5))
                 if ceilingCollisionTime < firstCollision:
                     firstCollision = ceilingCollisionTime
             except ValueError:
@@ -96,6 +101,22 @@ class ball:
         else:
             # TODO : figure out what to return for the soccer ball
             pass
+
+    def checkBallCollision(self, otherBall, deltaTime):
+        deltaPosition = (otherBall.position[0] - self.position[0], otherBall.position[1] - self.position[1])
+        deltaVelocity = (otherBall.velocity[0] - self.velocity[0], otherBall.velocity[1] - self.velocity[1])
+        deltaAcceleration = (otherBall.acceleration[0] - self.acceleration[0], otherBall.acceleration[1] - self.acceleration[1])
+        combinedRadius = otherBall.radius + self.radius
+        # Find at what point the balls are vertically aligned with each other
+        leftAlignmentTime = deltaTime + 1
+        if deltaAcceleration == 0 or (deltaAcceleration[0] > 0) == (deltaPosition > 0): 
+            try:
+                leftAlignedFunction = lambda t : deltaPosition[0] + (deltaAcceleration[0] * t / ball.drag) + (deltaVelocity[0]/ball.drag - deltaAcceleration[0]/(math.pow(ball.drag, 2))) * (1 - math.exp(-1 * ball.drag * t)) + combinedRadius
+                leftAlignmentTime = binaryEstimation(leftAlignedFunction, (0, deltaTime), 0.5)
+            except ValueError:
+                pass
+        
+
 
 class playerBall:
     jumpHeight = 0
@@ -114,7 +135,7 @@ class playerBall:
         self.position = self.ball.position
         self.velocity = self.ball.velocity
         self.acceleration = self.ball.acceleration
-        self.drag = self.ball.drag
+        ball.drag = self.ball.drag
 
 
     def moveRight(self):
@@ -155,7 +176,7 @@ class goalBall:
         self.position = self.ball.position
         self.velocity = self.ball.velocity
         self.acceleration = self.ball.acceleration
-        self.drag = self.ball.drag
+        ball.drag = self.ball.drag
 
     def predictX(self, deltaTime):
         return self.ball.predictX(deltaTime)

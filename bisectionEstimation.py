@@ -1,7 +1,6 @@
 import math
 
-# TODO : figure out if lambdas would be relevant
-def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float):
+def binaryEstimation(expression, startPoints : tuple[float, float], tolerance : float) -> float:
     startValue0 = expression(startPoints[0])
     startValue1 = expression(startPoints[1])
     if startValue0 == 0:
@@ -37,3 +36,13 @@ def rootEstimation(expression, startPoints : tuple[int, int], tolerance : float)
         else:
             negativePoint = newPoint
             # negativeValue = newValue
+
+def derivativeEstimation(expression, derivative, startPoint : float, tolerance : float) -> float:
+    lastPoint = startPoint + tolerance * 2
+    nextPoint = startPoint 
+    while abs(lastPoint - nextPoint) > tolerance:
+        lastPoint = nextPoint
+        nextPoint = lastPoint - expression(lastPoint) / derivative(lastPoint)
+        print(nextPoint)
+    return nextPoint
+
