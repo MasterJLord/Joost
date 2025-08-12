@@ -7,6 +7,7 @@ class ball:
     @staticmethod
     def changeDrag(newDrag : int):
         ball.drag = newDrag
+        ball.granularity = 10
 
     def __init__(self, color : pygame.color, radius : int, mass : int, position: list, velocity : list, acceleration : list):
         self.color = color
@@ -106,16 +107,18 @@ class ball:
         deltaPosition = (otherBall.position[0] - self.position[0], otherBall.position[1] - self.position[1])
         deltaVelocity = (otherBall.velocity[0] - self.velocity[0], otherBall.velocity[1] - self.velocity[1])
         deltaAcceleration = (otherBall.acceleration[0] - self.acceleration[0], otherBall.acceleration[1] - self.acceleration[1])
-        combinedRadius = otherBall.radius + self.radius
-        # Find at what point the balls are vertically aligned with each other
-        leftAlignmentTime = deltaTime + 1
-        if deltaAcceleration == 0 or (deltaAcceleration[0] > 0) == (deltaPosition > 0): 
-            try:
-                leftAlignedFunction = lambda t : deltaPosition[0] + (deltaAcceleration[0] * t / ball.drag) + (deltaVelocity[0]/ball.drag - deltaAcceleration[0]/(math.pow(ball.drag, 2))) * (1 - math.exp(-1 * ball.drag * t)) + combinedRadius
-                leftAlignmentTime = binaryEstimation(leftAlignedFunction, (0, deltaTime), 0.5)
-            except ValueError:
-                pass
-        
+        radiusSquared = math.pow(otherBall.radius + self.radius, 2)
+        checkTime = min((ball.granularity, deltaTime))
+        xDistanceFormula = lambda t : deltaPosition[0]  +  deltaAcceleration[0] / ball.drag * t  +  (deltaAcceleration[0] / (ball.drag * ball.drag) - deltaVelocity[0] / ball.drag) * (math.exp(-1 * ball.drag * t) - 1)
+        yDistanceFormula = lambda t : deltaPosition[1]  +  deltaAcceleration[1] / ball.drag * t  +  (deltaAcceleration[1] / (ball.drag * ball.drag) - deltaVelocity[1] / ball.drag) * (math.exp(-1 * ball.drag * t) - 1)
+        totalDistanceSquared = lambda t : math.pow(xDistanceFormula(t), 2) + math.pow(yDistanceFormula(t), 2)
+        while checkTime <= deltaTime:
+            dist = totalDistanceSquared(checkTime)
+            if dist < radiusSquared:
+                collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
+                return collisionTime
+            checkTime += ball.granularity
+            
 
 
 class playerBall:
