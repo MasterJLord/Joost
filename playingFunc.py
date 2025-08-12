@@ -1,6 +1,7 @@
 import pygame, typing
 from balls import *
 from socketThread import *
+from copy import deepcopy
 
 CHECKUP_INTERVAL = 1000
 ACTION_CODES = {
@@ -54,9 +55,12 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["playerLastCheckups"][p] = float("inf")
             else:
                 gameState["playerLastCheckups"][p] = time
+            # TODO : record player actions as events
 
-
-    traverse(gameState, )
+    safeTimeEnds = math.min(gameState["playerLastCheckups"])
+    if gameState["savedTime"] < safeTimeEnds:
+        traverse(gameState, safeTimeEnds, True)
+    traverse(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
     renderScreen(gameState)
     return "Playing"
 
@@ -75,5 +79,20 @@ def renderScreen(gameState : dict) -> None:
     for b in (*gameState["balls"], *gameState["players"]):
         pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (100 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
 
-def traverse(gameState : dict, endTime : int) -> Tuple[bool, List[ball], List[ball]]:
-    pass
+def traverse(gameState : dict, endTime : int, editSource : bool = False) -> Tuple[bool, List[ball], List[ball]]:
+    playersCopy = gameState["players"] if editSource else [deepcopy(i) for i in gameState["players"]]
+    ballsCopy = gameState["balls"] if editSource else [deepcopy(i) for i in gameState["balls"]]
+    workingTime = gameState["savedTime"]
+    while workingTime < endTime:
+        pass
+        # Find next player action event
+        # if none is found before endTime:
+            # move balls forwards to endtime; break
+        # Find any collisions before this event
+        # if collision happened:
+            # move balls forwards
+            # apply collision
+            # update workingTime
+        # else:
+            # move balls forwards
+            # apply player event
