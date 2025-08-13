@@ -16,7 +16,6 @@ ACTION_CODES = {
 ACTION_CODES_REVERSED = {b : a for (a, b) in ACTION_CODES.items()}
 
 def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
-    print("frameTick")
     for e in events:
         if e.type == pygame.QUIT:
             gameState["lobby"].sendInt(ACTION_CODES["quit"])
@@ -60,13 +59,13 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 continue
             else:
                 gameState["playerLastCheckups"][p] = time
-            if ACTION_CODES_REVERSED != "checkin":
+            if ACTION_CODES_REVERSED[option] != "checkin":
                 index = 0
                 for i in gameState["playerActionTimings"]:
                     if i < time:
                         index += 1
                 gameState["playerActionTimings"].insert(index, time)
-                gameState["playerActionEvents"].insert(index, (p, option))
+                gameState["playerActionEvents"].insert(index, (p, ACTION_CODES_REVERSED[option]))
 
 
     safeTimeEnds = min(gameState["playerLastCheckups"])
@@ -118,6 +117,7 @@ def setupGame(gameState):
     gameState["playerActionTimings"] = []
     gameState["playerActionEvents"] = []
     ball.changeDrag(gameState["drag"])
+    playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
 
 
 
