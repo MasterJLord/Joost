@@ -30,11 +30,12 @@ gameState = {
         pygame.K_a: "left",
         pygame.K_RIGHT: "right",
         pygame.K_d: "right"
-    }
+    },
+    "forceOfGravity": 0.00025,
+    "drag": 0.0001
 }
 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
-ball.changeDrag(0.6)
     
 Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
@@ -47,7 +48,8 @@ while True:
 
     for e in events:
         if e.type == pygame.QUIT:
-            sys.exit()
+            print(threading.enumerate())
+            quit()
 
 
     gameState["finalScreen"].blit(gameState["screen"], (0, 0))

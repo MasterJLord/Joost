@@ -16,10 +16,12 @@ ACTION_CODES = {
 ACTION_CODES_REVERSED = {b : a for (a, b) in ACTION_CODES.items()}
 
 def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
+    print("frameTick")
     for e in events:
         if e.type == pygame.QUIT:
             gameState["lobby"].sendInt(ACTION_CODES["quit"])
             gameState["lobby"].sendInt(0)
+            print("stopping")
             return
         if e.type == pygame.KEYDOWN:
             action = gameState["keybinds"].get(e.key, None)
@@ -70,6 +72,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     safeTimeEnds = min(gameState["playerLastCheckups"])
     if gameState["savedTime"] < safeTimeEnds:
         physicsTick(gameState, safeTimeEnds, True)
+        gameState["savedTime"] = safeTimeEnds
     physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
     renderScreen(gameState)
     return "Playing"
@@ -91,27 +94,30 @@ def setupGame(gameState):
     spacing1 = 100 / (team1 + 1)
     team0 = 0
     team1 = 0
-    gameState["players"] = []
+    gameState["playersSaved"] = []
     for p in gameState["playerColors"]:
         if -1 < p < TEAM_COLORS_NUM:
             team0 += 1
-            gameState["players"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
         elif TEAM_COLORS_NUM <= p:
             team1 += 1
-            gameState["players"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
 
 
-    gameState["balls"] = []
-    gameState["balls"].append(goalBall((0, 130, 0), 4, 30, [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, -1]))
+    gameState["ballsSaved"] = []
+    gameState["ballsSaved"].append(goalBall((0, 130, 0), 4, 30, [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
 
 
     # Do other required pregame settup
     gameState["movingDirection"] = None
     gameState["lastCheckupTime"] = gameState["gameStartTime"]
-    gameState["savedTime"] = gameState["gameStartTime"]
-    gameState["playerLastCheckups"] = [gameState["gameStartTime"] for i in range(team0 + team1)]
+    gameState["savedTime"] = 0
+    gameState["balls"] = gameState["ballsSaved"]
+    gameState["players"] = gameState["playersSaved"]
+    gameState["playerLastCheckups"] = [0 for i in range(team0 + team1)]
     gameState["playerActionTimings"] = []
     gameState["playerActionEvents"] = []
+    ball.changeDrag(gameState["drag"])
 
 
 
@@ -132,9 +138,16 @@ def renderScreen(gameState : dict) -> None:
 
 
 
-def physicsTick(gameState : dict, endTime : int, editSource : bool = False) -> Tuple[bool, List[ball], List[ball]]:
-    workingPlayers = gameState["players"] if editSource else [deepcopy(i) for i in gameState["players"]]
-    workingBalls = gameState["balls"] if editSource else [deepcopy(i) for i in gameState["balls"]]
+def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
+    if editSource:
+        workingPlayers = gameState["playersSaved"]
+        workingBalls = gameState["ballsSaved"]
+    else:
+        gameState["players"] = deepcopy(gameState["playersSaved"])
+        workingPlayers = gameState["players"]
+        gameState["balls"] = deepcopy(gameState["ballsSaved"])
+        workingBalls = gameState["balls"]
+    allBalls = (*workingBalls, *workingPlayers)
     workingTime = gameState["savedTime"]
     # Find next player action event
     index = 0
@@ -147,29 +160,62 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False) -> T
             deltaTime = endTime - workingTime
         else:
             deltaTime = gameState["playerActionTimings"][index] - workingTime
+        
+        # Find any collisions before this event
         interruptingEvent = None
         if deltaTime > 0:
-            pass
-            # Find any collisions before this event
+            for b in allBalls:
+                # return format: (the time the collision took place, which wall was hit)
+                potentialCollision = b.checkWallCollisions(gameState["boardWidth"], deltaTime)
+                if potentialCollision == None:
+                    continue
+                elif potentialCollision[0] <= 0:
+                    continue
+                elif potentialCollision[0] < deltaTime or interruptingEvent == None:
+                    deltaTime = potentialCollision[0]
+                    interruptingEvent = [(b, potentialCollision[1])]
+                elif potentialCollision[0] == deltaTime:
+                    interruptingEvent.append((b, potentialCollision[1]))
+            for i in range(len(allBalls)):
+                for ii in range(i):
+                    potentialCollision = allBalls[i].checkBallCollision(allBalls[ii], deltaTime)
+                    if potentialCollision == None:
+                        continue
+                    elif potentialCollision <= 0:
+                        continue
+                    elif potentialCollision < deltaTime or interruptingEvent == None:
+                        deltaTime = potentialCollision[0]
+                        interruptingEvent = [(allBalls[i], allBalls[ii])]
+                    elif potentialCollision == deltaTime:
+                        interruptingEvent.append((allBalls[i], allBalls[ii]))
+
+
+        # Move balls forwards
+        if deltaTime > 0:
+            for b in allBalls:
+                b.move(deltaTime)
         # if collision(s) happened:
-            # move balls forwards
             # apply collision
             # update workingTime
         # else:
-            # move balls forwards
             # apply player event
         if interruptingEvent == None:
-            for b in (*workingBalls, *workingPlayers):
-                b.move(deltaTime)
             if index < len(gameState["playerActionEvents"]):
                 event = gameState["playerActionEvents"][index]
                 if event[1] == "stop":
-                    gameState["players"][event[0]].stopMoving()
+                    workingPlayers[event[0]].stopMoving()
                 elif event[1] == "right":
-                    gameState["players"][event[0]].moveRight()
+                    workingPlayers[event[0]].moveRight()
                 elif event[1] == "left":
-                    gameState["players"][event[0]].moveLeft()
+                    workingPlayers[event[0]].moveLeft()
                 elif event[1] == "up":
-                    gameState["players"][event[0]].jump()
+                    workingPlayers[event[0]].jump()
             index += 1
+            workingTime += deltaTime
+        else:
+            for e in interruptingEvent:
+                if type(e[1]) == ball:
+                    e[0].collideWithBall(e[1])
+                elif type(e[1]) == str:
+                    e[0].collideWithWall(e[1])
             workingTime += deltaTime

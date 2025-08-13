@@ -24,7 +24,6 @@ def binaryEstimation(expression, startPoints : tuple[float, float], tolerance : 
     while True:
         newPoint = (negativePoint + positivePoint) / 2
         # newPoint = negativePoint - negativeValue * ((positivePoint - negativePoint) / (positiveValue - negativeValue))
-        print(newPoint)
         if abs(positivePoint - negativePoint) < tolerance * 2:
             return newPoint
         newValue = expression(newPoint)

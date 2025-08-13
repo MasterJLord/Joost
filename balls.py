@@ -134,8 +134,25 @@ class ball:
         return None
     
     def collideWithBall(self, otherBall):
-        pass
-            
+        print("IT'S HAPPENING!")
+
+    def collideWithWall(self, wall : str):
+        if wall == "left":
+            if self.velocity[0] < 0:
+                self.velocity[0] = self.velocity[0] * -1
+        elif wall == "right":
+            if self.velocity[0] > 0:
+                self.velocity[0] = self.velocity[0] * -1
+        elif wall == "up":
+            if self.velocity[1] > 0:
+                self.velocity[1] = self.velocity[1] * -1
+        elif wall == "down":
+            print("before: " + str(self.velocity[1]))
+            if self.velocity[1] < 0:
+                self.velocity[1] = self.velocity[1] * -1
+            print("after: " + str(self.velocity[1]))
+
+
 
 
 class playerBall:
@@ -182,14 +199,17 @@ class playerBall:
     def move(self, deltaTime):
         return self.ball.move(deltaTime)
     
-    def checkWallCollisions(self, deltaTime):
-        return self.ball.checkWallCollisions(deltaTime)
+    def checkWallCollisions(self, stageWidth : int, deltaTime : int):
+        return self.ball.checkWallCollisions(stageWidth, deltaTime)
     
-    def checkBallCollisions(self, otherBall, deltaTime):
+    def checkBallCollision(self, otherBall, deltaTime):
         return self.ball.checkBallCollision(otherBall, deltaTime)
     
     def collideWithBall(self, otherBall):
-        self.ball.collideWithBall(otherBall)
+        return self.ball.collideWithBall(otherBall)
+
+    def collideWithWall(self, wall : str):
+        return self.ball.collideWithWall(wall)
 
 
 class goalBall:
@@ -204,6 +224,10 @@ class goalBall:
         self.acceleration = self.ball.acceleration
         ball.drag = self.ball.drag
 
+    def checkWallCollisions(self, stageWidth : int, deltaTime : int):
+        # TODO
+        return self.ball.checkWallCollisions(stageWidth, deltaTime)
+
     def predictX(self, deltaTime):
         return self.ball.predictX(deltaTime)
     
@@ -213,8 +237,11 @@ class goalBall:
     def move(self, deltaTime):
         return self.ball.move(deltaTime)
     
-    def checkBallCollisions(self, otherBall, deltaTime):
+    def checkBallCollision(self, otherBall, deltaTime):
         return self.ball.checkBallCollision(otherBall, deltaTime)
     
     def collideWithBall(self, otherBall):
-        self.ball.collideWithBall(otherBall)
+        return self.ball.collideWithBall(otherBall)
+
+    def collideWithWall(self, wall : str):
+        return self.ball.collideWithWall(wall)
