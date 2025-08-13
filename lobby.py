@@ -4,6 +4,7 @@ from teamColors import *
 from writer import Writer
 from time import time
 from balls import *
+from playingFunc import setupGame
 
 
 # TODO: remove magic numbers (low priority)
@@ -53,36 +54,3 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
 
     return "Lobby"
 
-
-def setupGame(gameState):
-    # Set up balls
-    team0 = 0
-    team1 = 0
-    for p in gameState["playerColors"]:
-        if -1 < p < TEAM_COLORS_NUM:
-            team0 += 1
-        elif TEAM_COLORS_NUM <= p:
-            team1 += 1
-    spacing0 = 100 / (team0 + 1)
-    spacing1 = 100 / (team1 + 1)
-    team0 = 0
-    team1 = 0
-    gameState["players"] = []
-    for p in gameState["playerColors"]:
-        if -1 < p < TEAM_COLORS_NUM:
-            team0 += 1
-            gameState["players"].append(playerBall(teamColors[p], 3, 20, (gameState["boardWidth"] * 0.85, spacing0 * team0), (0, 0), (0, 0), 0.6))
-        elif TEAM_COLORS_NUM <= p:
-            team1 += 1
-            gameState["players"].append(playerBall(teamColors[p], 3, 20, (gameState["boardWidth"] * 0.15, spacing1 * team1), (0, 0), (0, 0), 0.6))
-
-
-    gameState["balls"] = []
-    gameState["balls"].append(goalBall((0, 130, 0), 4, 30, (gameState["boardWidth"] * 0.5, 50), (0, 0), (0, 0), 0.6))
-
-
-    # Do other required pregame settup
-    gameState["movingDirection"] = None
-    gameState["lastCheckupTime"] = gameState["gameStartTime"]
-    gameState["savedTime"] = gameState["gameStartTime"]
-    gameState["playerLastCheckups"] = [gameState["gameStartTime"] for i in range(team0 + team1)]

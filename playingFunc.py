@@ -1,6 +1,7 @@
 import pygame, typing
 from balls import *
 from socketThread import *
+from teamColors import *
 from copy import deepcopy
 
 CHECKUP_INTERVAL = 1000
@@ -19,6 +20,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         if e.type == pygame.QUIT:
             gameState["lobby"].sendInt(ACTION_CODES["quit"])
             gameState["lobby"].sendInt(0)
+            return
         if e.type == pygame.KEYDOWN:
             action = gameState["keybinds"].get(e.key, None)
             if action == "up":
@@ -48,21 +50,70 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         gameState["lastCheckupTime"] = pygame.time.get_ticks()
 
     for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(6)):
-        for m, t in range(n):
+        for m in range(math.floor(n/2)):
             option = gameState["lobby"].getInt(p)
             time = gameState["lobby"].getInt(p)
             if ACTION_CODES_REVERSED[option] == "quit":
                 gameState["playerLastCheckups"][p] = float("inf")
+                continue
             else:
                 gameState["playerLastCheckups"][p] = time
-            # TODO : record player actions as events
+            if ACTION_CODES_REVERSED != "checkin":
+                index = 0
+                for i in gameState["playerActionTimings"]:
+                    if i < time:
+                        index += 1
+                gameState["playerActionTimings"].insert(index, time)
+                gameState["playerActionEvents"].insert(index, (p, option))
 
-    safeTimeEnds = math.min(gameState["playerLastCheckups"])
+
+    safeTimeEnds = min(gameState["playerLastCheckups"])
     if gameState["savedTime"] < safeTimeEnds:
-        traverse(gameState, safeTimeEnds, True)
-    traverse(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
+        physicsTick(gameState, safeTimeEnds, True)
+    physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
     renderScreen(gameState)
     return "Playing"
+
+
+
+
+
+def setupGame(gameState):
+    # Set up balls
+    team0 = 0
+    team1 = 0
+    for p in gameState["playerColors"]:
+        if -1 < p < TEAM_COLORS_NUM:
+            team0 += 1
+        elif TEAM_COLORS_NUM <= p:
+            team1 += 1
+    spacing0 = 100 / (team0 + 1)
+    spacing1 = 100 / (team1 + 1)
+    team0 = 0
+    team1 = 0
+    gameState["players"] = []
+    for p in gameState["playerColors"]:
+        if -1 < p < TEAM_COLORS_NUM:
+            team0 += 1
+            gameState["players"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1]))
+        elif TEAM_COLORS_NUM <= p:
+            team1 += 1
+            gameState["players"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1]))
+
+
+    gameState["balls"] = []
+    gameState["balls"].append(goalBall((0, 130, 0), 4, 30, [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, -1]))
+
+
+    # Do other required pregame settup
+    gameState["movingDirection"] = None
+    gameState["lastCheckupTime"] = gameState["gameStartTime"]
+    gameState["savedTime"] = gameState["gameStartTime"]
+    gameState["playerLastCheckups"] = [gameState["gameStartTime"] for i in range(team0 + team1)]
+    gameState["playerActionTimings"] = []
+    gameState["playerActionEvents"] = []
+
+
 
 def renderScreen(gameState : dict) -> None:
     onePercentPixels = gameState["screenSize"][1] * 0.0095
@@ -79,20 +130,46 @@ def renderScreen(gameState : dict) -> None:
     for b in (*gameState["balls"], *gameState["players"]):
         pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (100 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
 
-def traverse(gameState : dict, endTime : int, editSource : bool = False) -> Tuple[bool, List[ball], List[ball]]:
-    playersCopy = gameState["players"] if editSource else [deepcopy(i) for i in gameState["players"]]
-    ballsCopy = gameState["balls"] if editSource else [deepcopy(i) for i in gameState["balls"]]
+
+
+def physicsTick(gameState : dict, endTime : int, editSource : bool = False) -> Tuple[bool, List[ball], List[ball]]:
+    workingPlayers = gameState["players"] if editSource else [deepcopy(i) for i in gameState["players"]]
+    workingBalls = gameState["balls"] if editSource else [deepcopy(i) for i in gameState["balls"]]
     workingTime = gameState["savedTime"]
+    # Find next player action event
+    index = 0
+    for i in gameState["playerActionTimings"]:
+        if i < workingTime:
+            index += 1
     while workingTime < endTime:
-        pass
-        # Find next player action event
-        # if none is found before endTime:
-            # move balls forwards to endtime; break
-        # Find any collisions before this event
-        # if collision happened:
+        # Find next next player action event
+        if index >= len(gameState["playerActionTimings"]):
+            deltaTime = endTime - workingTime
+        else:
+            deltaTime = gameState["playerActionTimings"][index] - workingTime
+        interruptingEvent = None
+        if deltaTime > 0:
+            pass
+            # Find any collisions before this event
+        # if collision(s) happened:
             # move balls forwards
             # apply collision
             # update workingTime
         # else:
             # move balls forwards
             # apply player event
+        if interruptingEvent == None:
+            for b in (*workingBalls, *workingPlayers):
+                b.move(deltaTime)
+            if index < len(gameState["playerActionEvents"]):
+                event = gameState["playerActionEvents"][index]
+                if event[1] == "stop":
+                    gameState["players"][event[0]].stopMoving()
+                elif event[1] == "right":
+                    gameState["players"][event[0]].moveRight()
+                elif event[1] == "left":
+                    gameState["players"][event[0]].moveLeft()
+                elif event[1] == "up":
+                    gameState["players"][event[0]].jump()
+            index += 1
+            workingTime += deltaTime

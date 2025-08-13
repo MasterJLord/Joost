@@ -26,8 +26,8 @@ class ball:
     def move(self, deltaTime : int):
         self.position[0] = self.predictX(deltaTime)
         self.position[1] = self.predictY(deltaTime)
-        self.velocity[0] = self.acceleration[0] / ball.drag + (self.velocity[0] - self.acceleration[0] / ball.drag) * math.pow(-1 * ball.drag * deltaTime)
-        self.velocity[1] = self.acceleration[1] / ball.drag + (self.velocity[1] - self.acceleration[1] / ball.drag) * math.pow(-1 * ball.drag * deltaTime)
+        self.velocity[0] = self.acceleration[0] / ball.drag + (self.velocity[0] - self.acceleration[0] / ball.drag) * math.exp(-1 * ball.drag * deltaTime)
+        self.velocity[1] = self.acceleration[1] / ball.drag + (self.velocity[1] - self.acceleration[1] / ball.drag) * math.exp(-1 * ball.drag * deltaTime)
 
     def checkWallCollisions(self, stageWidth : int, deltaTime : int):
         firstCollision = deltaTime + 1
@@ -132,6 +132,9 @@ class ball:
             if collisionTime < deltaTime:
                 return collisionTime
         return None
+    
+    def collideWithBall(self, otherBall):
+        pass
             
 
 
@@ -181,6 +184,12 @@ class playerBall:
     
     def checkWallCollisions(self, deltaTime):
         return self.ball.checkWallCollisions(deltaTime)
+    
+    def checkBallCollisions(self, otherBall, deltaTime):
+        return self.ball.checkBallCollision(otherBall, deltaTime)
+    
+    def collideWithBall(self, otherBall):
+        self.ball.collideWithBall(otherBall)
 
 
 class goalBall:
@@ -204,5 +213,8 @@ class goalBall:
     def move(self, deltaTime):
         return self.ball.move(deltaTime)
     
-    def checkWallCollisions(self, deltaTime):
-        return self.ball.checkWallCollisions(deltaTime)
+    def checkBallCollisions(self, otherBall, deltaTime):
+        return self.ball.checkBallCollision(otherBall, deltaTime)
+    
+    def collideWithBall(self, otherBall):
+        self.ball.collideWithBall(otherBall)

@@ -34,6 +34,7 @@ gameState = {
 }
 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
+ball.changeDrag(0.6)
     
 Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
@@ -45,7 +46,6 @@ while True:
     mode = functionDict[mode](events, gameState)
 
     for e in events:
-        print(e.type)
         if e.type == pygame.QUIT:
             sys.exit()
 
