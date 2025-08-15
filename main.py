@@ -31,10 +31,12 @@ gameState = {
         pygame.K_RIGHT: "right",
         pygame.K_d: "right"
     },
-    "forceOfGravity": 0.00025,
-    "drag": 0.0005,
-    "playerJumpHeight": 0.05,
-    "playerMoveSpeed": 0.0005
+    "playerSize" : 3,
+    "ballSize" : 4,
+    "forceOfGravity": 0.0002,
+    "drag": 0.0015,
+    "playerJumpHeight": 0.03,
+    "playerMoveSpeed": 0.00025
 }
 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)

@@ -122,15 +122,21 @@ class ball:
         while checkTime <= deltaTime:
             dist = totalDistanceSquared(checkTime)
             if dist < radiusSquared:
-                collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
-                if collisionTime > 0:
-                    return collisionTime
+                try:
+                    collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
+                    if collisionTime > 0:
+                        return collisionTime
+                except ValueError:
+                    print("Error!")
             checkTime += ball.granularity
         dist = totalDistanceSquared(checkTime)
         if dist < radiusSquared:
-            collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
-            if collisionTime < deltaTime:
-                return collisionTime
+            try:
+                collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
+                if collisionTime < deltaTime:
+                    return collisionTime
+            except ValueError:
+                pass
         return None
     
     def collideWithBall(self, otherBall):

@@ -97,14 +97,14 @@ def setupGame(gameState):
     for p in gameState["playerColors"]:
         if -1 < p < TEAM_COLORS_NUM:
             team0 += 1
-            gameState["playersSaved"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["playerSize"], 20, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
         elif TEAM_COLORS_NUM <= p:
             team1 += 1
-            gameState["playersSaved"].append(playerBall(teamColors[p], 3, 20, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["playerSize"], 20, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
 
 
     gameState["ballsSaved"] = []
-    gameState["ballsSaved"].append(goalBall((0, 130, 0), 4, 30, [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
+    gameState["ballsSaved"].append(goalBall((0, 130, 0), gameState["ballSize"], 30, [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
 
 
     # Do other required pregame settup
@@ -184,7 +184,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                     elif potentialCollision <= 0:
                         continue
                     elif potentialCollision < deltaTime or interruptingEvent == None:
-                        deltaTime = potentialCollision[0]
+                        deltaTime = potentialCollision
                         interruptingEvent = [(allBalls[i], allBalls[ii])]
                     elif potentialCollision == deltaTime:
                         interruptingEvent.append((allBalls[i], allBalls[ii]))
