@@ -127,7 +127,7 @@ class ball:
                     if collisionTime > 0:
                         return collisionTime
                 except ValueError:
-                    print("Error!")
+                    pass
             checkTime += ball.granularity
         dist = totalDistanceSquared(checkTime)
         if dist < radiusSquared:

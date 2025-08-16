@@ -6,11 +6,12 @@ class eventHarvester:
         self.eventQueue = []
         self.lock = threading.Lock()
         self.tempQueue = []
+        self.continuing = True
         threading.Thread(target=self.__harvestEvents, daemon=True).start()
 
     def __harvestEvents(self):
         pygame.display.set_mode()
-        while True:
+        while self.continuing:
             if len(self.tempQueue) > 0:
                 if self.lock.acquire(blocking=False):
                     for e in self.tempQueue:
@@ -23,9 +24,10 @@ class eventHarvester:
                         potentialEvent.time = pygame.time.get_ticks()
                         self.tempQueue.append(potentialEvent)
             else:
-                nextEvent = pygame.event.wait()
-                nextEvent.time = pygame.time.get_ticks()
-                self.tempQueue.append(nextEvent)
+                nextEvent = pygame.event.wait(10)
+                if nextEvent.type != pygame.NOEVENT:
+                    nextEvent.time = pygame.time.get_ticks()
+                    self.tempQueue.append(nextEvent)
 
     def getEvents(self) -> list:
         response = []
@@ -35,4 +37,7 @@ class eventHarvester:
             self.eventQueue.clear()
             self.lock.release()
         return response
+
+    def stop(self):
+        self.continuing = False
         

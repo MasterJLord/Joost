@@ -52,7 +52,7 @@ while True:
 
     for e in events:
         if e.type == pygame.QUIT:
-            print(threading.enumerate())
+            eventHarvester.stop()
             quit()
 
 
