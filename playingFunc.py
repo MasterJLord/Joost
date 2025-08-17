@@ -181,13 +181,14 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                     potentialCollision = allBalls[i].checkBallCollision(allBalls[ii], deltaTime)
                     if potentialCollision == None:
                         continue
-                    elif potentialCollision <= 0:
-                        continue
-                    elif potentialCollision < deltaTime or interruptingEvent == None:
-                        deltaTime = potentialCollision
-                        interruptingEvent = [(allBalls[i], allBalls[ii])]
-                    elif potentialCollision == deltaTime:
-                        interruptingEvent.append((allBalls[i], allBalls[ii]))
+                    else:
+                        if potentialCollision <= 0:
+                            continue
+                        elif potentialCollision < deltaTime or interruptingEvent == None:
+                            deltaTime = potentialCollision
+                            interruptingEvent = [(allBalls[i], allBalls[ii])]
+                        elif potentialCollision == deltaTime:
+                            interruptingEvent.append((allBalls[i], allBalls[ii]))
 
 
         # Move balls forwards
@@ -214,7 +215,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
             workingTime += deltaTime
         else:
             for e in interruptingEvent:
-                if type(e[1]) == ball:
+                if type(e[1]) in (ball, playerBall, goalBall):
                     e[0].collideWithBall(e[1])
                 elif type(e[1]) == str:
                     e[0].collideWithWall(e[1])

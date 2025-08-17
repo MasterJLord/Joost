@@ -119,6 +119,8 @@ class ball:
         xDistanceFormula = lambda t : deltaPosition[0]  +  deltaAcceleration[0] / ball.drag * t  +  (deltaAcceleration[0] / (ball.drag * ball.drag) - deltaVelocity[0] / ball.drag) * (math.exp(-1 * ball.drag * t) - 1)
         yDistanceFormula = lambda t : deltaPosition[1]  +  deltaAcceleration[1] / ball.drag * t  +  (deltaAcceleration[1] / (ball.drag * ball.drag) - deltaVelocity[1] / ball.drag) * (math.exp(-1 * ball.drag * t) - 1)
         totalDistanceSquared = lambda t : math.pow(xDistanceFormula(t), 2) + math.pow(yDistanceFormula(t), 2)
+        if totalDistanceSquared(0) < radiusSquared:
+            return None
         while checkTime <= deltaTime:
             dist = totalDistanceSquared(checkTime)
             if dist < radiusSquared:
@@ -133,14 +135,24 @@ class ball:
         if dist < radiusSquared:
             try:
                 collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
-                if collisionTime < deltaTime:
-                    return collisionTime
+                if collisionTime <= deltaTime:
+                    return math.ceil(collisionTime)
             except ValueError:
                 pass
         return None
     
     def collideWithBall(self, otherBall):
-        print("IT'S HAPPENING!")
+        directionToBall = (otherBall.position[0] - self.position[0], otherBall.position[1] - self.position[1])
+        normalizedToBall = (directionToBall[0] / math.sqrt(directionToBall[0] * directionToBall[0] + directionToBall[1] * directionToBall[1]), directionToBall[1] / math.sqrt(directionToBall[0] * directionToBall[0] + directionToBall[1] * directionToBall[1]))
+        myForceProjected = (self.velocity[0] * normalizedToBall[0], self.velocity[1] * normalizedToBall[1])
+        otherForceProjected = (otherBall.velocity[0] / normalizedToBall[0], otherBall.velocity[1] / normalizedToBall[1])
+        myForceBounceMult = otherBall.mass * 2 / (self.mass + otherBall.mass)
+        otherForceBounceMult = self.mass * 2 / (self.mass + otherBall.mass)
+        self.velocity[0] += myForceProjected[0] * myForceBounceMult
+        self.velocity[1] += myForceProjected[1] * myForceBounceMult
+        otherBall.velocity[0] += otherForceProjected[0] * otherForceBounceMult
+        otherBall.velocity[1] += otherForceProjected[1] * otherForceBounceMult
+
 
     def collideWithWall(self, wall : str):
         if wall == "left":
