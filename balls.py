@@ -153,8 +153,8 @@ class ball:
         deltaVelocity = (otherBall.velocity[0] - self.velocity[0], otherBall.velocity[1] - self.velocity[1])
         deltaProjection = (deltaVelocity[0] * normalizedToBall[0], deltaVelocity[1] * normalizedToBall[1])
         bounceForce = math.sqrt(deltaProjection[0] * deltaProjection[0] + deltaProjection[1] * deltaProjection[1]) / (self.mass + otherBall.mass)
-        myVelocityProjection = (self.velocity[0] * normalizedToBall[0], self.velocity[1] * normalizedToBall[1])
-        otherVelocityProjection = (otherBall.velocity[0] * normalizedToBall[0], otherBall.velocity[1] * normalizedToBall[1])
+        myVelocityProjection = (abs(self.velocity[0]) * normalizedToBall[0], abs(self.velocity[1]) * normalizedToBall[1])
+        otherVelocityProjection = (abs(otherBall.velocity[0]) * normalizedToBall[0], abs(otherBall.velocity[1]) * normalizedToBall[1])
 
         # Applies force to the balls to stop them moving towards each other
         self.velocity[0] -= myVelocityProjection[0]
