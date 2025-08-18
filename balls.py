@@ -1,6 +1,12 @@
 import pygame, math, typing
 from bisectionEstimation import binaryEstimation
 
+def positiveAtZero(func):
+    return lambda x : 1 if x < 1 else func(x)
+
+def negativeAtZero(func):
+    return lambda x : -1 if x < 1 else func(x)
+
 class ball:
     drag = 0
 
@@ -34,7 +40,7 @@ class ball:
 
         if self.acceleration[0] <= 0:
             try:
-                leftWallCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictX(x) - self.radius, (0, deltaTime), 0.5))
+                leftWallCollisionTime = math.ceil(binaryEstimation(positiveAtZero(lambda x : self.predictX(x) - self.radius), (0, deltaTime), 0.5))
                 if leftWallCollisionTime < firstCollision:
                     firstCollision = leftWallCollisionTime
                     direction = "left"
@@ -43,7 +49,7 @@ class ball:
         elif self.velocity[0] < 0:
             minimumPointTime = math.log((1 - self.velocity[0] * ball.drag / self.acceleration[0])) / ball.drag
             try:
-                leftWallCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictX(x) - self.radius, (0, minimumPointTime), 0.5))
+                leftWallCollisionTime = math.ceil(binaryEstimation(positiveAtZero(lambda x : self.predictX(x) - self.radius), (0, minimumPointTime), 0.5))
                 if leftWallCollisionTime < firstCollision:
                     firstCollision = leftWallCollisionTime
                     direction = "left"
@@ -52,7 +58,7 @@ class ball:
 
         if self.acceleration[0] >= 0:
             try:
-                rightWallCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, deltaTime), 0.5))
+                rightWallCollisionTime = math.ceil(binaryEstimation(negativeAtZero(lambda x : self.predictX(x) + self.radius - stageWidth), (0, deltaTime), 0.5))
                 if rightWallCollisionTime < firstCollision:
                     firstCollision = rightWallCollisionTime
                     direction = "right"
@@ -61,7 +67,7 @@ class ball:
         elif self.velocity[0] < 0:
             maximumPointTime = math.log((1 - self.velocity[0] * ball.drag / self.acceleration[0])) / ball.drag
             try:
-                rightWallCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictX(x) + self.radius - stageWidth, (0, maximumPointTime), 0.5))
+                rightWallCollisionTime = math.ceil(binaryEstimation(negativeAtZero(lambda x : self.predictX(x) + self.radius - stageWidth), (0, maximumPointTime), 0.5))
                 if rightWallCollisionTime < firstCollision:
                     firstCollision = rightWallCollisionTime
                     direction = "right"
@@ -70,7 +76,7 @@ class ball:
 
         if self.acceleration[1] <= 0:
             try:
-                floorCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictY(x) - self.radius, (0, deltaTime), 0.5))
+                floorCollisionTime = math.ceil(binaryEstimation(positiveAtZero(lambda x : self.predictY(x) - self.radius), (0, deltaTime), 0.5))
                 if floorCollisionTime < firstCollision:
                     firstCollision = floorCollisionTime
                     direction = "down"
@@ -79,7 +85,7 @@ class ball:
         elif self.velocity[1] < 0:
             minimumPointTime = math.log((1 - self.velocity[1] * ball.drag / self.acceleration[1])) / ball.drag
             try:
-                floorCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictY(x) - self.radius, (0, minimumPointTime), 0.5))
+                floorCollisionTime = math.ceil(binaryEstimation(positiveAtZero(lambda x : self.predictY(x) - self.radius), (0, minimumPointTime), 0.5))
                 if floorCollisionTime < firstCollision:
                     firstCollision = floorCollisionTime
                     direction = "down"
@@ -88,7 +94,7 @@ class ball:
 
         if self.acceleration[1] >= 0:
             try:
-                ceilingCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, deltaTime), 0.5))
+                ceilingCollisionTime = math.ceil(binaryEstimation(negativeAtZero(lambda x : self.predictY(x) + self.radius - 100), (0, deltaTime), 0.5))
                 if ceilingCollisionTime < firstCollision:
                     firstCollision = ceilingCollisionTime
                     direction = "up"
@@ -97,7 +103,7 @@ class ball:
         elif self.velocity[1] > 0:
             maximumPointTime = math.log((1 - self.velocity[1] * ball.drag / self.acceleration[1])) / ball.drag
             try:
-                ceilingCollisionTime = math.ceil(binaryEstimation(lambda x : self.predictY(x) + self.radius - 100, (0, maximumPointTime), 0.5))
+                ceilingCollisionTime = math.ceil(binaryEstimation(negativeAtZero(lambda x : self.predictY(x) + self.radius - 100), (0, maximumPointTime), 0.5))
                 if ceilingCollisionTime < firstCollision:
                     firstCollision = ceilingCollisionTime
                     direction = "up"
@@ -120,12 +126,12 @@ class ball:
         yDistanceFormula = lambda t : deltaPosition[1]  +  deltaAcceleration[1] / ball.drag * t  +  (deltaAcceleration[1] / (ball.drag * ball.drag) - deltaVelocity[1] / ball.drag) * (math.exp(-1 * ball.drag * t) - 1)
         totalDistanceSquared = lambda t : math.pow(xDistanceFormula(t), 2) + math.pow(yDistanceFormula(t), 2)
         if totalDistanceSquared(0) < radiusSquared:
-            return None
+            return
         while checkTime <= deltaTime:
             dist = totalDistanceSquared(checkTime)
             if dist < radiusSquared:
                 try:
-                    collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
+                    collisionTime = int(binaryEstimation(positiveAtZero(lambda t : totalDistanceSquared(t) - radiusSquared), (checkTime - ball.granularity, checkTime), 0.5))
                     if collisionTime > 0:
                         return collisionTime
                 except ValueError:
@@ -134,7 +140,7 @@ class ball:
         dist = totalDistanceSquared(checkTime)
         if dist < radiusSquared:
             try:
-                collisionTime = int(binaryEstimation(lambda t : totalDistanceSquared(t) - radiusSquared, (checkTime - ball.granularity, checkTime), 0.5))
+                collisionTime = int(binaryEstimation(positiveAtZero(lambda t : totalDistanceSquared(t) - radiusSquared), (checkTime - ball.granularity, checkTime), 0.5))
                 if collisionTime <= deltaTime:
                     return math.ceil(collisionTime)
             except ValueError:

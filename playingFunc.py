@@ -134,7 +134,7 @@ def renderScreen(gameState : dict) -> None:
     gameState["screen"].fill((0, 0, 0))    
     pygame.draw.rect(gameState["screen"], (25, 25, 25), (-1 * leftOffset * onePercentPixels, gameState["screenSize"][1] * 0.025, gameState["boardWidth"] * onePercentPixels, gameState["screenSize"][1] * 0.95))
     for b in (*gameState["balls"], *gameState["players"]):
-        pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (100 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
+        pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (102.5 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
 
 
 
@@ -154,7 +154,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
     for i in gameState["playerActionTimings"]:
         if i < workingTime:
             index += 1
-    while workingTime < endTime:
+    while index <= len(gameState["playerActionTimings"]):
         # Find next next player action event
         if index >= len(gameState["playerActionTimings"]):
             deltaTime = endTime - workingTime
