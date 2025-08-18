@@ -64,7 +64,7 @@ class ball:
                     direction = "right"
             except ValueError:
                 pass
-        elif self.velocity[0] < 0:
+        elif self.velocity[0] > 0:
             maximumPointTime = math.log((1 - self.velocity[0] * ball.drag / self.acceleration[0])) / ball.drag
             try:
                 rightWallCollisionTime = math.ceil(binaryEstimation(negativeAtZero(lambda x : self.predictX(x) + self.radius - stageWidth), (0, maximumPointTime), 0.5))
@@ -150,14 +150,24 @@ class ball:
     def collideWithBall(self, otherBall):
         directionToBall = (otherBall.position[0] - self.position[0], otherBall.position[1] - self.position[1])
         normalizedToBall = (directionToBall[0] / math.sqrt(directionToBall[0] * directionToBall[0] + directionToBall[1] * directionToBall[1]), directionToBall[1] / math.sqrt(directionToBall[0] * directionToBall[0] + directionToBall[1] * directionToBall[1]))
-        myForceProjected = (self.velocity[0] * normalizedToBall[0], self.velocity[1] * normalizedToBall[1])
-        otherForceProjected = (otherBall.velocity[0] / normalizedToBall[0], otherBall.velocity[1] / normalizedToBall[1])
-        myForceBounceMult = otherBall.mass * 2 / (self.mass + otherBall.mass)
-        otherForceBounceMult = self.mass * 2 / (self.mass + otherBall.mass)
-        self.velocity[0] += myForceProjected[0] * myForceBounceMult
-        self.velocity[1] += myForceProjected[1] * myForceBounceMult
-        otherBall.velocity[0] += otherForceProjected[0] * otherForceBounceMult
-        otherBall.velocity[1] += otherForceProjected[1] * otherForceBounceMult
+        deltaVelocity = (otherBall.velocity[0] - self.velocity[0], otherBall.velocity[1] - self.velocity[1])
+        deltaProjection = (deltaVelocity[0] * normalizedToBall[0], deltaVelocity[1] * normalizedToBall[1])
+        bounceForce = math.sqrt(deltaProjection[0] * deltaProjection[0] + deltaProjection[1] * deltaProjection[1]) / (self.mass + otherBall.mass)
+        myVelocityProjection = (self.velocity[0] * normalizedToBall[0], self.velocity[1] * normalizedToBall[1])
+        otherVelocityProjection = (otherBall.velocity[0] * normalizedToBall[0], otherBall.velocity[1] * normalizedToBall[1])
+
+        # Applies force to the balls to stop them moving towards each other
+        self.velocity[0] -= myVelocityProjection[0]
+        self.velocity[1] -= myVelocityProjection[1]
+        otherBall.velocity[0] += otherVelocityProjection[0]
+        otherBall.velocity[1] += otherVelocityProjection[1]
+
+        # Applies force to the balls to bounce them away from each other
+        self.velocity[0] -= normalizedToBall[0] * bounceForce * otherBall.mass
+        self.velocity[1] -= normalizedToBall[1] * bounceForce * otherBall.mass  
+        otherBall.velocity[0] += normalizedToBall[0] * bounceForce * self.mass
+        otherBall.velocity[1] += normalizedToBall[1] * bounceForce * self.mass
+        
 
 
     def collideWithWall(self, wall : str):

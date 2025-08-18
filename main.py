@@ -33,6 +33,7 @@ gameState = {
     },
     "playerSize" : 3,
     "ballSize" : 4,
+    "ballMass" : 75,
     "forceOfGravity": 0.0002,
     "drag": 0.0015,
     "playerJumpHeight": 0.03,
