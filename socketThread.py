@@ -191,8 +191,8 @@ class serverConnector:
             self._player_connections[playerNum] = socket
 
             # Tell the client their player number first thing
-            socket.send(self.lobbySize.to_bytes(2))
-            socket.send(playerNum.to_bytes(2))
+            socket.send(self.lobbySize.to_bytes(2, signed=False))
+            socket.send(playerNum.to_bytes(2, signed=False))
 
             # Start two threads for this client
             threading.Thread(target=self._receiveFromClients, args=(playerNum, socket), daemon=True).start()
@@ -204,8 +204,8 @@ class serverConnector:
     def _receiveFromClients(self, playerNum: int, socket: socketThread) -> None:
         while True:
             try:
-                messageSize = int.from_bytes(socket.recv(2))
-                message = int.from_bytes(socket.recv(messageSize))
+                messageSize = int.from_bytes(socket.recv(2), signed=False)
+                message = int.from_bytes(socket.recv(messageSize), signed=True)
             except Exception:
                 # Connection died; stop listening.
                 return
@@ -223,10 +223,10 @@ class serverConnector:
             self._sendMessageEvents[playerNum].clear()
             while len(self._backlog[playerNum]) > 0:
                 nextMessage = self._backlog[playerNum].pop(0)
-                socket.send(nextMessage[0].to_bytes(2))
+                socket.send(nextMessage[0].to_bytes(2, signed=False))
                 size = sys.getsizeof(nextMessage[1])
-                socket.send(size.to_bytes(2))
-                socket.send(nextMessage[1].to_bytes(size))
+                socket.send(size.to_bytes(2, signed=False))
+                socket.send(nextMessage[1].to_bytes(size, signed=True))
 
     # ------------------------------------------------------------------
     # Host: broadcast helper
@@ -244,9 +244,9 @@ class serverConnector:
     def _receiveFromServer(self) -> None:
         while True:
             try:
-                sender = int.from_bytes(self._clientThread.recv(2))
-                size = int.from_bytes(self._clientThread.recv(2))
-                message = int.from_bytes(self._clientThread.recv(size))
+                sender = int.from_bytes(self._clientThread.recv(2), signed=False)
+                size = int.from_bytes(self._clientThread.recv(2), signed=False)
+                message = int.from_bytes(self._clientThread.recv(size), signed=True)
                 with self._incomingLock:
                     if 0 <= sender < self.lobbySize:
                         self._receiveQueues[sender].append(message)
@@ -266,8 +266,8 @@ class serverConnector:
             # Broadcast to all clients
             self._broadcast(0, message)
         else:
-            sizeBytes = int.to_bytes(sys.getsizeof(message), 2)
-            messageBytes = int.to_bytes(message, sys.getsizeof(message))
+            sizeBytes = int.to_bytes(sys.getsizeof(message), 2, signed=False)
+            messageBytes = int.to_bytes(message, sys.getsizeof(message), signed=True)
             self._outgoingLock.acquire()
             self._clientThread.send(sizeBytes)
             self._clientThread.send(messageBytes)
