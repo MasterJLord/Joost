@@ -245,6 +245,12 @@ class playerBall:
 
 
 class goalBall:
+    goalHeight = 50
+    @staticmethod
+    def setGoalHeight(goalHeight):
+        goalBall.goalHeight = goalHeight
+
+
     def __init__(self, *args, **kwargs):
         self.ball = ball(*args, **kwargs)
 
@@ -257,8 +263,14 @@ class goalBall:
         ball.drag = self.ball.drag
 
     def checkWallCollisions(self, stageWidth : int, deltaTime : int):
-        # TODO
-        return self.ball.checkWallCollisions(stageWidth, deltaTime)
+        collision = self.ball.checkWallCollisions(stageWidth, deltaTime)
+        if collision == None:
+            return collision
+        if collision[1] == "left" or collision[1] == "right":
+            yHeight = self.predictY(collision[0])
+            if 50 - goalBall.goalHeight / 2 < yHeight < 50 + goalBall.goalHeight / 2:
+                return (collision[0], "win" + collision[1])
+        return collision
 
     def predictX(self, deltaTime):
         return self.ball.predictX(deltaTime)

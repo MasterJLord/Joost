@@ -118,6 +118,7 @@ def setupGame(gameState):
     gameState["playerActionEvents"] = []
     ball.changeDrag(gameState["drag"])
     playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
+    goalBall.setGoalHeight(gameState["goalHeight"])
 
 
 

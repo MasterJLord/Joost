@@ -24,6 +24,7 @@ try:
         "clock": pygame.time.Clock(),
         "finalScreen": pygame.display.get_surface(),
         "boardWidth": 300,
+        "goalHeight" : 50,
         "keybinds": {
             pygame.K_UP: "up",
             pygame.K_w: "up",
