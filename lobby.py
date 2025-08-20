@@ -45,7 +45,7 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
                 gameState["lobby"].sendInt(2)
                 
     gameState["screen"].fill((0, 0, 0))
-    pygame.draw.circle(gameState["screen"], (0, 130, 0), (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][gameState["myPlayerNum"]] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1 + 0.1 * gameState["myPlayerNum"])), 0.05 * gameState["screenSize"][1])
+    pygame.draw.circle(gameState["screen"], (0, 175, 175), (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][gameState["myPlayerNum"]] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1 + 0.1 * gameState["myPlayerNum"])), 0.05 * gameState["screenSize"][1])
     startWord = Writer.Write(15, "Start Game", color = (255, 255, 255) if gameState["myPlayerNum"] == 0 else (90, 85, 85))
     gameState["screen"].blit(startWord, (gameState["screenSize"][0] / 2 - startWord.get_width()/2, gameState["screenSize"][1] * 0.825))
     for p in range(6):

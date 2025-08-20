@@ -119,7 +119,7 @@ def setupRound(gameState):
 
 
     gameState["ballsSaved"] = []
-    gameState["ballsSaved"].append(goalBall((0, 130, 0), gameState["ballSize"], gameState["ballMass"], [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, 0]))
+    gameState["ballsSaved"].append(goalBall((0, 175, 175), gameState["ballSize"], gameState["ballMass"], [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, 0]))
 
 
     # Do other required pregame settup
