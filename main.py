@@ -33,9 +33,9 @@ try:
             pygame.K_RIGHT: "right",
             pygame.K_d: "right"
         },
-        "playerSize" : 3,
-        "ballSize" : 4,
-        "ballMass" : 75,
+        "playerSize" : 4,
+        "ballSize" : 5,
+        "ballMass" : 60,
         "forceOfGravity": 0.0002,
         "drag": 0.0015,
         "playerJumpHeight": 0.03,
@@ -44,7 +44,7 @@ try:
     gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
     gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
         
-    Writer.initializeWriter(5, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
+    Writer.initializeWriter(100, (gameState["finalScreen"].get_height(), gameState["finalScreen"].get_width()))
 
 
 

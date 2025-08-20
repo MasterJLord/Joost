@@ -313,3 +313,8 @@ class serverConnector:
 
     def isServer(self) -> bool:
         return self.isHost
+    
+    def clear(self):
+        with self._incomingLock:
+            for a in self._receiveQueues:
+                a.clear()

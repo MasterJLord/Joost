@@ -56,6 +56,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             time = gameState["lobby"].getInt(p)
             if ACTION_CODES_REVERSED[option] == "quit":
                 gameState["playerLastCheckups"][p] = float("inf")
+                gameState["playerColors"][p] = -20
                 continue
             else:
                 gameState["playerLastCheckups"][p] = time
@@ -74,13 +75,27 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         gameState["savedTime"] = safeTimeEnds
     physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
     renderScreen(gameState)
+
+    if gameState["gameEndTime"] < pygame.time.get_ticks():
+        if gameState["leftScore"] > 3 or gameState["rightScore"] > 3:
+            return "Lobby"
+        gameState["gameStartTime"] = gameState["gameEndTime"] + 3000
+        setupRound(gameState)
+        return "Countdown"
+
     return "Playing"
 
 
-
-
-
 def setupGame(gameState):
+    ball.changeDrag(gameState["drag"])
+    playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
+    goalBall.setGoalHeight(gameState["goalHeight"])
+    gameState["leftScore"] = 0
+    gameState["rightScore"] = 0
+    setupRound(gameState)
+
+
+def setupRound(gameState):
     # Set up balls
     team0 = 0
     team1 = 0
@@ -116,9 +131,7 @@ def setupGame(gameState):
     gameState["playerLastCheckups"] = [0 for i in range(team0 + team1)]
     gameState["playerActionTimings"] = []
     gameState["playerActionEvents"] = []
-    ball.changeDrag(gameState["drag"])
-    playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
-    goalBall.setGoalHeight(gameState["goalHeight"])
+    gameState["gameEndTime"] = float("inf")
 
 
 
@@ -132,8 +145,16 @@ def renderScreen(gameState : dict) -> None:
     else:
         leftOffset = gameState["players"][gameState["myPlayerNum"]].position[0] - screenWidth/2
 
-    gameState["screen"].fill((0, 0, 0))    
+    gameState["screen"].fill((0, 0, 0))   
+    # Draw score colors 
+    pygame.draw.rect(gameState["screen"], (0, 255, 0), ((gameState["boardWidth"] * onePercentPixels / 2 - leftOffset * onePercentPixels) - (gameState["boardWidth"] * onePercentPixels * (gameState["leftScore"] / 6)), 0, gameState["boardWidth"] * onePercentPixels * (gameState["leftScore"] / 6), gameState["screenSize"][1]))
+    pygame.draw.rect(gameState["screen"], (0, 0, 255), (gameState["boardWidth"] * onePercentPixels / 2 - leftOffset * onePercentPixels, 0, gameState["boardWidth"] * onePercentPixels * (gameState["rightScore"] / 6), gameState["screenSize"][1]))
+    # Draw background
     pygame.draw.rect(gameState["screen"], (25, 25, 25), (-1 * leftOffset * onePercentPixels, gameState["screenSize"][1] * 0.025, gameState["boardWidth"] * onePercentPixels, gameState["screenSize"][1] * 0.95))
+    # Draw goals
+    pygame.draw.rect(gameState["screen"], (0, 255, 0), ((-1 * leftOffset - 1) * onePercentPixels, gameState["screenSize"][1] * 0.5 - gameState["goalHeight"] * onePercentPixels / 2, 2 * onePercentPixels, gameState["goalHeight"] * onePercentPixels))
+    pygame.draw.rect(gameState["screen"], (0, 0, 255), ((gameState["boardWidth"] - leftOffset - 1) * onePercentPixels, gameState["screenSize"][1] * 0.5 - gameState["goalHeight"] * onePercentPixels / 2, 2 * onePercentPixels, gameState["goalHeight"] * onePercentPixels))
+
     for b in (*gameState["balls"], *gameState["players"]):
         pygame.draw.circle(gameState["screen"], b.color, ((b.position[0] - leftOffset) * onePercentPixels, (102.5 - b.position[1]) * onePercentPixels), b.radius * onePercentPixels)
 
@@ -196,6 +217,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
         if deltaTime > 0:
             for b in allBalls:
                 b.move(deltaTime)
+            workingTime += deltaTime
         # if collision(s) happened:
             # apply collision
             # update workingTime
@@ -213,11 +235,17 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                 elif event[1] == "up":
                     workingPlayers[event[0]].jump()
             index += 1
-            workingTime += deltaTime
         else:
             for e in interruptingEvent:
                 if type(e[1]) in (ball, playerBall, goalBall):
                     e[0].collideWithBall(e[1])
+                elif e[1] == "winleft" or e[1] == "winright":
+                    if editSource and gameState["gameEndTime"] == float("inf"):
+                        gameState["gameEndTime"] = gameState["gameStartTime"] + workingTime + 2000
+                        if e[1] == "winright":
+                            gameState["leftScore"] += 1
+                        elif e[1] == "winleft":
+                            gameState["rightScore"] += 1
+
                 elif type(e[1]) == str:
                     e[0].collideWithWall(e[1])
-            workingTime += deltaTime
