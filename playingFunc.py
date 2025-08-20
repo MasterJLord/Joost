@@ -87,7 +87,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
 
 def setupGame(gameState):
-    ball.changeDrag(gameState["drag"])
+    ball.changePhysics(gameState["drag"], gameState["minimumWallBounce"])
     playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
     goalBall.setGoalHeight(gameState["goalHeight"])
     gameState["leftScore"] = 0

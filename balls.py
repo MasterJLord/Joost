@@ -9,10 +9,12 @@ def negativeAtZero(func):
 
 class ball:
     drag = 0
+    minimumWallBounce = 0
 
     @staticmethod
-    def changeDrag(newDrag : int):
+    def changePhysics(newDrag : float, newBounce : float):
         ball.drag = newDrag
+        ball.minimumWallBounce = newBounce
         ball.granularity = 10
 
     def __init__(self, color : pygame.color, radius : int, mass : int, position: list, velocity : list, acceleration : list):
@@ -174,15 +176,19 @@ class ball:
         if wall == "left":
             if self.velocity[0] < 0:
                 self.velocity[0] = self.velocity[0] * -1
+                self.velocity[0] += ball.minimumWallBounce
         elif wall == "right":
             if self.velocity[0] > 0:
                 self.velocity[0] = self.velocity[0] * -1
+                self.velocity[0] -= ball.minimumWallBounce
         elif wall == "up":
             if self.velocity[1] > 0:
                 self.velocity[1] = self.velocity[1] * -1
+                self.velocity[1] -= ball.minimumWallBounce
         elif wall == "down":
             if self.velocity[1] < 0:
                 self.velocity[1] = self.velocity[1] * -1
+                self.velocity[1] += ball.minimumWallBounce
 
 
 

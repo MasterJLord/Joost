@@ -38,6 +38,7 @@ try:
         "ballMass" : 60,
         "forceOfGravity": 0.0002,
         "drag": 0.0015,
+        "minimumWallBounce" : 0.02,
         "playerJumpHeight": 0.03,
         "playerMoveSpeed": 0.00025
     }
