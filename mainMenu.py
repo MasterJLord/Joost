@@ -15,7 +15,10 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[
 
     for e in events:
         if e.type == pygame.MOUSEBUTTONDOWN:
-            isHost = True if e.pos[0] < gameState["screenSize"][0]/2 else False
+            isHost = e.pos[0] < gameState["screenSize"][0]/2
+            if isHost:
+                print(socket.gethostname())
+                gameState["eventHarvester"].recaption(socket.gethostname())
             gameState["lobby"] = serverConnector(("localhost", 20422), isHost, 4)
             gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
             gameState["playerColors"] = [-20 for i in range(6)]

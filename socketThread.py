@@ -147,6 +147,9 @@ class serverConnector:
         self._incomingLock = threading.Condition()
         self._outgoingLock = threading.Condition()
 
+        if type(socketInfo[0]) == str:
+            socketInfo = (socket.gethostbyname(socketInfo[0]), socketInfo[1])
+
         if isHost:
             # Per-player unread message queues 
             self._receiveQueues: List[List[int]] = [[] for i in range(lobbySize)]

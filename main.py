@@ -40,7 +40,8 @@ try:
         "drag": 0.0015,
         "minimumWallBounce" : 0.02,
         "playerJumpHeight": 0.03,
-        "playerMoveSpeed": 0.00025
+        "playerMoveSpeed": 0.00025,
+        "eventHarvester": eventHarvester
     }
     gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
     gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
@@ -54,14 +55,22 @@ try:
 
         mode = functionDict[mode](events, gameState)
 
+        gameState["finalScreen"].blit(gameState["screen"], (0, 0))
+        pygame.display.update()
+
+
         for e in events:
             if e.type == pygame.QUIT:
                 eventHarvester.stop()
                 quit()
+            # TODO : stop crashing on resize when this is supposed to be triggered
+            if e.type == pygame.VIDEORESIZE:
+                gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
+                gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
 
 
-        gameState["finalScreen"].blit(gameState["screen"], (0, 0))
-        pygame.display.update()
+
+
 except Exception as e:
     eventHarvester.stop()
     raise(e)
