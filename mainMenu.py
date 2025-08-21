@@ -3,9 +3,10 @@ from socketThread import *
 from writer import Writer
 from balls import *
 from teamColors import teamColors
+from lobby import joinLobby
 
 
-def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
+def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     gameState["screen"].fill((238, 173, 14))
     pygame.draw.rect(gameState["screen"], (72, 61, 139), (gameState["screenSize"][0]/2, 0, gameState["screenSize"][0]/2, gameState["screenSize"][1]))
     label = Writer.Write(10, "Host", 50, True)
@@ -17,12 +18,11 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[
         if e.type == pygame.MOUSEBUTTONDOWN:
             isHost = e.pos[0] < gameState["screenSize"][0]/2
             if isHost:
-                print(socket.gethostname())
-                gameState["eventHarvester"].recaption(socket.gethostname())
-            gameState["lobby"] = serverConnector(("localhost", 20422), isHost, 4)
-            gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
-            gameState["playerColors"] = [-20 for i in range(6)]
-            gameState["lobby"].sendInt(2)
-            return "Lobby"
+                gameState["hostName"] = socket.gethostname()
+                joinLobby(gameState, True)
+                return "Lobby"
+            else:
+                gameState["hostName"] = ""
+                return "TypeHost"
     return "MainMenu"
         

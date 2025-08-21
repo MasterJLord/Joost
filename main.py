@@ -4,7 +4,7 @@ from playingFunc import *
 from lobby import *
 from countdown import *
 from writer import Writer
-import sys
+from typeHost import typingFrame
 
 pygame.init()
 
@@ -17,7 +17,8 @@ try:
         "MainMenu": mainMenuFrame,
         "Lobby": lobbyFrame,
         "Countdown": countdownFrame,
-        "Playing": playingFrame
+        "Playing": playingFrame,
+        "TypeHost": typingFrame
     }
 
     gameState = {

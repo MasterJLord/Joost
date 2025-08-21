@@ -8,7 +8,7 @@ from playingFunc import setupGame
 
 
 # TODO: remove magic numbers (low priority)
-def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dict, pygame.Surface, str]:
+def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     # Makes sure events are synced across all players' machines
     for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(6)):
         for m in range(n):
@@ -54,3 +54,9 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> tuple[dic
 
     return "Lobby"
 
+def joinLobby(gameState, isHost):
+    gameState["lobby"] = serverConnector(("localhost", 20422), isHost, 6)
+    gameState["eventHarvester"].recaption(gameState["hostName"])
+    gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
+    gameState["playerColors"] = [-20 for i in range(6)]
+    gameState["lobby"].sendInt(2)
