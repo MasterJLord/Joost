@@ -65,18 +65,16 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 for i in gameState["playerActionTimings"]:
                     if i < time:
                         index += 1
+                    else:
+                        break
                 gameState["playerActionTimings"].insert(index, time)
                 gameState["playerActionEvents"].insert(index, (p, ACTION_CODES_REVERSED[option]))
 
-    oldPosition = gameState["players"][0].position
     safeTimeEnds = min(gameState["playerLastCheckups"])
     if gameState["savedTime"] < safeTimeEnds:
         physicsTick(gameState, safeTimeEnds, True)
         gameState["savedTime"] = safeTimeEnds
         physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
-        if abs(oldPosition[0] - gameState["players"][0].position[0] > 2):
-            print(oldPosition)
-            print(gameState["players"][0].position)
     else:
         physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
 
@@ -178,20 +176,18 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
     workingTime = gameState["savedTime"]
     # Find next player action event
     index = 0
+    endIndex = 0
     for i in gameState["playerActionTimings"]:
         if i < workingTime:
             index += 1
-        else:
-            break
-    endIndex = index
-    for i in gameState["playerActionTimings"][index:]:
-        if i < endTime:
+            endIndex += 1
+        elif i < endTime - 1:
             endIndex += 1
         else:
             break
     while index <= endIndex:
         # Find next next player action event
-        if index >= len(gameState["playerActionTimings"]) or gameState["playerActionTimings"][index] > endTime:
+        if index >= len(gameState["playerActionTimings"]) or gameState["playerActionTimings"][index] >= endTime:
             deltaTime = endTime - workingTime
         else:
             deltaTime = gameState["playerActionTimings"][index] - workingTime
@@ -230,14 +226,13 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
         if deltaTime > 0:
             for b in (*workingBalls, *workingPlayers):
                 b.move(deltaTime)
-                # print(b.velocity[1])
             workingTime += deltaTime
         # if collision(s) happened:
             # apply collision
         # else:
             # apply player event
         if interruptingEvent == None:
-            if index < len(gameState["playerActionEvents"]) and gameState["playerActionTimings"][index] <= endTime:
+            if index < len(gameState["playerActionEvents"]) and gameState["playerActionTimings"][index] < endTime:
                 event = gameState["playerActionEvents"][index]
                 if event[1] == "stop":
                     workingPlayers[event[0]].stopMoving()
@@ -246,9 +241,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                 elif event[1] == "left":
                     workingPlayers[event[0]].moveLeft()
                 elif event[1] == "up":
-                    print(workingPlayers[event[0]].velocity[1])
                     workingPlayers[event[0]].jump()
-                    print(workingPlayers[event[0]].velocity[1])
             index += 1
         else:
             for e in interruptingEvent:

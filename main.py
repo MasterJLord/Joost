@@ -40,7 +40,7 @@ try:
         "forceOfGravity": 0.0002,
         "drag": 0.0015,
         "minimumWallBounce" : 0.02,
-        "playerJumpHeight": 0.03,
+        "playerJumpHeight": 0.06,
         "playerMoveSpeed": 0.00025,
         "eventHarvester": eventHarvester
     }
