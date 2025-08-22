@@ -4,7 +4,7 @@ from socketThread import *
 from teamColors import *
 from copy import deepcopy
 
-CHECKUP_INTERVAL = 5000
+CHECKUP_INTERVAL = 300
 ACTION_CODES = {
     "stop" : 0,
     "left" : -1,
