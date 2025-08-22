@@ -4,7 +4,7 @@ from socketThread import *
 from teamColors import *
 from copy import deepcopy
 
-CHECKUP_INTERVAL = 1000
+CHECKUP_INTERVAL = 5000
 ACTION_CODES = {
     "stop" : 0,
     "left" : -1,
@@ -68,12 +68,18 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["playerActionTimings"].insert(index, time)
                 gameState["playerActionEvents"].insert(index, (p, ACTION_CODES_REVERSED[option]))
 
-
+    oldPosition = gameState["players"][0].position
     safeTimeEnds = min(gameState["playerLastCheckups"])
     if gameState["savedTime"] < safeTimeEnds:
         physicsTick(gameState, safeTimeEnds, True)
         gameState["savedTime"] = safeTimeEnds
-    physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
+        physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
+        if abs(oldPosition[0] - gameState["players"][0].position[0] > 2):
+            print(oldPosition)
+            print(gameState["players"][0].position)
+    else:
+        physicsTick(gameState, pygame.time.get_ticks() - gameState["gameStartTime"])
+
     renderScreen(gameState)
 
     if gameState["gameEndTime"] < pygame.time.get_ticks():
@@ -169,16 +175,23 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
         workingPlayers = gameState["players"]
         gameState["balls"] = deepcopy(gameState["ballsSaved"])
         workingBalls = gameState["balls"]
-    allBalls = (*workingBalls, *workingPlayers)
     workingTime = gameState["savedTime"]
     # Find next player action event
     index = 0
     for i in gameState["playerActionTimings"]:
         if i < workingTime:
             index += 1
-    while index <= len(gameState["playerActionTimings"]):
+        else:
+            break
+    endIndex = index
+    for i in gameState["playerActionTimings"][index:]:
+        if i < endTime:
+            endIndex += 1
+        else:
+            break
+    while index <= endIndex:
         # Find next next player action event
-        if index >= len(gameState["playerActionTimings"]):
+        if index >= len(gameState["playerActionTimings"]) or gameState["playerActionTimings"][index] > endTime:
             deltaTime = endTime - workingTime
         else:
             deltaTime = gameState["playerActionTimings"][index] - workingTime
@@ -186,7 +199,7 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
         # Find any collisions before this event
         interruptingEvent = None
         if deltaTime > 0:
-            for b in allBalls:
+            for b in (*workingBalls, *workingPlayers):
                 # return format: (the time the collision took place, which wall was hit)
                 potentialCollision = b.checkWallCollisions(gameState["boardWidth"], deltaTime)
                 if potentialCollision == None:
@@ -198,9 +211,9 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                     interruptingEvent = [(b, potentialCollision[1])]
                 elif potentialCollision[0] == deltaTime:
                     interruptingEvent.append((b, potentialCollision[1]))
-            for i in range(len(allBalls)):
+            for i in range(len((*workingBalls, *workingPlayers))):
                 for ii in range(i):
-                    potentialCollision = allBalls[i].checkBallCollision(allBalls[ii], deltaTime)
+                    potentialCollision = (*workingBalls, *workingPlayers)[i].checkBallCollision((*workingBalls, *workingPlayers)[ii], deltaTime)
                     if potentialCollision == None:
                         continue
                     else:
@@ -208,23 +221,23 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                             continue
                         elif potentialCollision < deltaTime or interruptingEvent == None:
                             deltaTime = potentialCollision
-                            interruptingEvent = [(allBalls[i], allBalls[ii])]
+                            interruptingEvent = [((*workingBalls, *workingPlayers)[i], (*workingBalls, *workingPlayers)[ii])]
                         elif potentialCollision == deltaTime:
-                            interruptingEvent.append((allBalls[i], allBalls[ii]))
+                            interruptingEvent.append(((*workingBalls, *workingPlayers)[i], (*workingBalls, *workingPlayers)[ii]))
 
 
         # Move balls forwards
         if deltaTime > 0:
-            for b in allBalls:
+            for b in (*workingBalls, *workingPlayers):
                 b.move(deltaTime)
+                # print(b.velocity[1])
             workingTime += deltaTime
         # if collision(s) happened:
             # apply collision
-            # update workingTime
         # else:
             # apply player event
         if interruptingEvent == None:
-            if index < len(gameState["playerActionEvents"]):
+            if index < len(gameState["playerActionEvents"]) and gameState["playerActionTimings"][index] <= endTime:
                 event = gameState["playerActionEvents"][index]
                 if event[1] == "stop":
                     workingPlayers[event[0]].stopMoving()
@@ -233,7 +246,9 @@ def physicsTick(gameState : dict, endTime : int, editSource : bool = False):
                 elif event[1] == "left":
                     workingPlayers[event[0]].moveLeft()
                 elif event[1] == "up":
+                    print(workingPlayers[event[0]].velocity[1])
                     workingPlayers[event[0]].jump()
+                    print(workingPlayers[event[0]].velocity[1])
             index += 1
         else:
             for e in interruptingEvent:

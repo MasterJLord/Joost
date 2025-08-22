@@ -11,7 +11,7 @@ pygame.init()
 # Creates a thread to receive events as fast as possible and timestamp with the precise time they are received
 eventHarvester = eventHarvester()
 
-try:
+try:    
     mode = "MainMenu"
     functionDict = {
         "MainMenu": mainMenuFrame,
@@ -68,7 +68,6 @@ try:
             if e.type == pygame.VIDEORESIZE:
                 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
                 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
-
 
 
 
