@@ -6,6 +6,8 @@ from time import time
 from balls import *
 from playingFunc import setupGame
 
+CENTRAL_SERVER_INFO = ()
+
 
 # TODO: remove magic numbers (low priority)
 def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
@@ -54,9 +56,15 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
     return "Lobby"
 
-def joinLobby(gameState, isHost):
-    gameState["lobby"] = serverConnector(("localhost", 20422), isHost, 6)
+def joinLobby(gameState : dict) -> bool:
+    try:
+        pass
+    except ConnectionRefusedError:
+        return False
+    # are I have stupid
+    gameState["lobby"] = serverConnector(("localhost", 20422), gameState["isHost"], 6)
     gameState["eventHarvester"].recaption(gameState["hostName"])
     gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
     gameState["playerColors"] = [-20 for i in range(6)]
     gameState["lobby"].sendInt(2)
+    return True

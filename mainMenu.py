@@ -16,13 +16,8 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
     for e in events:
         if e.type == pygame.MOUSEBUTTONDOWN:
-            isHost = e.pos[0] < gameState["screenSize"][0]/2
-            if isHost:
-                gameState["hostName"] = socket.gethostname()
-                joinLobby(gameState, True)
-                return "Lobby"
-            else:
-                gameState["hostName"] = ""
-                return "TypeHost"
+            gameState["isHost"] = e.pos[0] < gameState["screenSize"][0]/2
+            gameState["lobbyName"] = ""
+            return "TypeHost"
     return "MainMenu"
         

@@ -1,6 +1,10 @@
-import pygame
+import pygame, pyperclip, math
 from lobby import joinLobby
 from writer import Writer
+from socketThread import *
+
+
+LOBBY_NAME_LIMIT = 40
 
 KEY_CODES = {
     pygame.K_0: ("0", ")"),
@@ -52,22 +56,30 @@ KEY_CODES = {
     pygame.K_BACKSLASH: ("|", "|")
 }
 
+CHAR_NUMS = {list(KEY_CODES.values())[math.floor(i/2)][i%2]: i for i in range(len(KEY_CODES.values()) * 2)}
+
 def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     for e in events:
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_RETURN:
-                try:
-                    joinLobby(gameState, False)
-                except ConnectionRefusedError as cre:
-                    return "MainMenu"
-                return "Lobby"
+                gameState["lobbyNum"] = 0
+                for c in range(len(gameState["lobbyName"])):
+                    gameState["lobbyNum"] += CHAR_NUMS[gameState["lobbyName"][c]] * len(CHAR_NUMS)**c
+                return "Lobby" if joinLobby(gameState) else "MainMenu"
+            
+            elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL:
+                gameState["lobbyName"] = pyperclip.paste()
+                for c in ("\n", "\r"):
+                    gameState["lobbyName"].replace(c, "")
+                gameState["lobbyName"] = gameState["lobbyName"][0:40]
             elif e.key == pygame.K_BACKSPACE:
-                if len(gameState["hostName"]) > 0:
-                    gameState["hostName"] = gameState["hostName"][0 : len(gameState["hostName"]) - 1]
+                if len(gameState["lobbyName"]) > 0:
+                    gameState["lobbyName"] = gameState["lobbyName"][0 : len(gameState["lobbyName"]) - 1]
             elif e.key in KEY_CODES.keys():
-                gameState["hostName"] += KEY_CODES[e.key][1 if e.mod & pygame.KMOD_SHIFT else 0]
+                if len(gameState["lobbyName"]) < 40:
+                    gameState["lobbyName"] += KEY_CODES[e.key][1 if e.mod & pygame.KMOD_SHIFT else 0]
 
-    text = Writer.Write(5, "Host: " + gameState["hostName"])
+    text = Writer.Write(10, "Lobby: " + gameState["lobbyName"])
     gameState["screen"].fill((0, 0, 0))
     gameState["screen"].blit(text, (gameState["screenSize"][0] / 2 - text.get_width() / 2, gameState["screenSize"][1] / 2 - text.get_height() / 2))
             
