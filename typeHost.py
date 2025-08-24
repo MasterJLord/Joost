@@ -53,13 +53,22 @@ KEY_CODES = {
     pygame.K_COMMA: (",", "<"),
     pygame.K_PERIOD: (".", ">"),
     pygame.K_SPACE: (" ", " "),
-    pygame.K_BACKSLASH: ("|", "|")
+    pygame.K_BACKSLASH: ("|", "|"),
+    pygame.K_SPACE: (" ", " " )
 }
 
 CHAR_NUMS = {list(KEY_CODES.values())[math.floor(i/2)][i%2]: i for i in range(len(KEY_CODES.values()) * 2)}
 
 def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     for e in events:
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            gameState["lobbyName"] = ""
+            if gameState["lobbyJoinMode"] == "Lobby":
+                gameState["lobbyJoinMode"] = "Hostname"
+            elif gameState["lobbyJoinMode"] == "Hostname":
+                gameState["lobbyJoinMode"] = "IP Address"
+            elif gameState["lobbyJoinMode"] == "IP Address":
+                gameState["lobbyJoinMode"] = "Lobby" if gameState["serverAvailable"] else "Hostname"
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_RETURN:
                 gameState["lobbyNum"] = 0
@@ -69,18 +78,38 @@ def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             
             elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL:
                 gameState["lobbyName"] = pyperclip.paste()
-                for c in ("\n", "\r"):
-                    gameState["lobbyName"].replace(c, "")
+                c = 0
+                while c < len(gameState["lobbyName"]):
+                    if gameState["lobbyName"][c] in CHAR_NUMS.keys():
+                        c += 1
+                    else:
+                        gameState["lobbyName"] = gameState["lobbyName"][0:c] + gameState["lobbyName"][c+1:]
                 gameState["lobbyName"] = gameState["lobbyName"][0:40]
-            elif e.key == pygame.K_BACKSPACE:
+            elif e.key == pygame.K_BACKSPACE or e.key == pygame.K_DELETE:
                 if len(gameState["lobbyName"]) > 0:
                     gameState["lobbyName"] = gameState["lobbyName"][0 : len(gameState["lobbyName"]) - 1]
             elif e.key in KEY_CODES.keys():
                 if len(gameState["lobbyName"]) < 40:
                     gameState["lobbyName"] += KEY_CODES[e.key][1 if e.mod & pygame.KMOD_SHIFT else 0]
 
-    text = Writer.Write(10, "Lobby: " + gameState["lobbyName"])
+    if gameState["isHost"]:
+        if gameState["lobbyJoinMode"] == "Hostname":
+            gameState["lobbyName"] = gameState.get("myHostname")
+            if gameState["lobbyName"] == None:
+                gameState["myHostname"] = socket.gethostname()
+                gameState["lobbyName"] = gameState["myHostname"]
+        elif gameState["lobbyJoinMode"] == "IP Address":
+            gameState["lobbyName"] = gameState.get("myIPAddress")
+            if gameState["lobbyName"] == None:
+                gameState["myIPAddress"] = socket.gethostbyname(socket.gethostname())
+                gameState["lobbyName"] = gameState["myIPAddress"]
+
+    text = Writer.Write(5, gameState["lobbyJoinMode"] + ": " + gameState["lobbyName"])
+    instructionText = Writer.Write(5, "Click to change join mode")
+    instructionText2 = Writer.Write(5, "Press enter to " + "host" if gameState["isHost"] else "join" + " lobby")
     gameState["screen"].fill((0, 0, 0))
-    gameState["screen"].blit(text, (gameState["screenSize"][0] / 2 - text.get_width() / 2, gameState["screenSize"][1] / 2 - text.get_height() / 2))
+    gameState["screen"].blit(text, (gameState["screenSize"][0] / 2 - text.get_width() / 2, gameState["screenSize"][1] * 0.4 - text.get_height() / 2))
+    gameState["screen"].blit(instructionText, (gameState["screenSize"][0] / 2 - instructionText.get_width() / 2, gameState["screenSize"][1] * 0.6 - instructionText.get_height() / 2))
+    gameState["screen"].blit(instructionText2, (gameState["screenSize"][0] / 2 - instructionText2.get_width() / 2, gameState["screenSize"][1] * 0.7 - instructionText2.get_height() / 2))
             
     return "TypeHost"

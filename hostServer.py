@@ -2,15 +2,25 @@ from socketThread import *
 import pygame
 
 LOBBY_ACTIVE_TIME = 300000 # A lobby cannot be created with the same name as an existing one until 5 at least 5 minutes have passed
-
+PORT = 8884
 
 pygame.init()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("localhost", 8884))
+server.bind(("localhost", PORT))
 server.listen()
 activeLobbies = {}
 doLogging = True
+
+def makePingable():
+    pingServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    pingServer.bind(("localhost", PORT + 1))
+    pingServer.listen()
+    while True:
+        ping = pingServer.accept()
+        ping[0].close()
+
+threading.Thread(target=makePingable).start()
 
 while True:
     connection = server.accept()
