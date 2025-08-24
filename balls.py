@@ -268,13 +268,18 @@ class goalBall:
         self.acceleration = self.ball.acceleration
         ball.drag = self.ball.drag
 
+        self.scoredThisFrame = False
+
     def checkWallCollisions(self, stageWidth : int, deltaTime : int):
+        if self.scoredThisFrame:
+            return None
         collision = self.ball.checkWallCollisions(stageWidth, deltaTime)
         if collision == None:
             return collision
         if collision[1] == "left" or collision[1] == "right":
             yHeight = self.predictY(collision[0])
             if 50 - goalBall.goalHeight / 2 < yHeight < 50 + goalBall.goalHeight / 2:
+                self.scoredThisFrame = True
                 return (collision[0], "win" + collision[1])
         return collision
 
@@ -285,6 +290,7 @@ class goalBall:
         return self.ball.predictY(deltaTime)
     
     def move(self, deltaTime):
+        self.scoredThisFrame = False
         return self.ball.move(deltaTime)
     
     def checkBallCollision(self, otherBall, deltaTime):
