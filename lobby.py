@@ -56,20 +56,20 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
     return "Lobby"
 
-def joinLobby(gameState : dict) -> bool:
+def getIPFromServer(gameState : dict) -> str:
     try:
         if gameState["isHost"]:
             server = socketThread(CENTRAL_SERVER_INFO)
             server.sendInt(gameState["lobbyNum"])
             server.sendInt(6)
-            gameState["lobby"] = serverConnector(("localhost", 20422), True, 6)
+            return "localhost"
         else:
             server = socketThread(CENTRAL_SERVER_INFO)
             server.sendInt(gameState["lobbyNum"])
             server.sendInt(0)
             hostIP = server.getInt()
             if hostIP == 0:
-                return False
+                return None
             print(hostIP)
             ipAddressSegments = []
             for i in range(math.ceil(math.log10(hostIP)/3)):
@@ -77,10 +77,22 @@ def joinLobby(gameState : dict) -> bool:
             ipAddressSegments.reverse()
             ipAddressStrings = [str(i) for i in ipAddressSegments]
             hostIPRedotted = ".".join(ipAddressStrings)
-            
-            gameState["lobby"] = serverConnector((hostIPRedotted, 20422), False)
-
+            return hostIPRedotted
     except ConnectionRefusedError:
+        gameState["serverAvailable"] = False
+        return None
+
+
+def joinLobby(gameState : dict) -> bool:
+    if gameState["lobbyJoinMode"] == "Lobby":
+        ipAddress = getIPFromServer(gameState)
+    elif gameState["lobbyJoinMode"] == "Hostname":
+        ipAddress = socket.gethostbyname(gameState["lobbyName"])
+    elif gameState["lobbyJoinMode"] == "IP Address":
+        ipAddress = gameState["lobbyName"]
+    try:
+        gameState["lobby"] = serverConnector((ipAddress, 20422), gameState["isHost"], 8)
+    except ConnectionError:
         return False
     gameState["eventHarvester"].recaption(gameState["lobbyName"])
     gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
