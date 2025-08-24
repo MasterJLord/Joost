@@ -6,7 +6,7 @@ from time import time
 from balls import *
 from playingFunc import setupGame
 
-CENTRAL_SERVER_INFO = ()
+CENTRAL_SERVER_INFO = (("localhost", 8884))
 
 
 # TODO: remove magic numbers (low priority)
@@ -58,12 +58,31 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
 def joinLobby(gameState : dict) -> bool:
     try:
-        pass
+        if gameState["isHost"]:
+            server = socketThread(CENTRAL_SERVER_INFO)
+            server.sendInt(gameState["lobbyNum"])
+            server.sendInt(6)
+            gameState["lobby"] = serverConnector(("localhost", 20422), True, 6)
+        else:
+            server = socketThread(CENTRAL_SERVER_INFO)
+            server.sendInt(gameState["lobbyNum"])
+            server.sendInt(0)
+            hostIP = server.getInt()
+            if hostIP == 0:
+                return False
+            print(hostIP)
+            ipAddressSegments = []
+            for i in range(math.ceil(math.log10(hostIP)/3)):
+                ipAddressSegments.append(math.floor((hostIP%(1000**(i+1)))/(1000**(i))))
+            ipAddressSegments.reverse()
+            ipAddressStrings = [str(i) for i in ipAddressSegments]
+            hostIPRedotted = ".".join(ipAddressStrings)
+            
+            gameState["lobby"] = serverConnector((hostIPRedotted, 20422), False)
+
     except ConnectionRefusedError:
         return False
-    # are I have stupid
-    gameState["lobby"] = serverConnector(("localhost", 20422), gameState["isHost"], 6)
-    gameState["eventHarvester"].recaption(gameState["hostName"])
+    gameState["eventHarvester"].recaption(gameState["lobbyName"])
     gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
     gameState["playerColors"] = [-20 for i in range(6)]
     gameState["lobby"].sendInt(2)

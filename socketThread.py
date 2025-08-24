@@ -70,6 +70,9 @@ class socketThread:
         self.socket.send(message.to_bytes(size, signed=True))
         self.sendLock.release()
 
+    def close(self):
+        self.socket.close()
+
     
 
 class serverSocket:
