@@ -5,8 +5,8 @@ from writer import Writer
 from time import time
 from balls import *
 from playingFunc import setupGame
+from hostServer import SERVER_IP_ADDRESS, SERVER_PORT
 
-CENTRAL_SERVER_INFO = (("localhost", 8884))
 
 
 # TODO: remove magic numbers (low priority)
@@ -59,12 +59,12 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 def getIPFromServer(gameState : dict) -> str:
     try:
         if gameState["isHost"]:
-            server = socketThread(CENTRAL_SERVER_INFO)
+            server = socketThread((SERVER_IP_ADDRESS, SERVER_PORT))
             server.sendInt(gameState["lobbyNum"])
             server.sendInt(6)
             return "localhost"
         else:
-            server = socketThread(CENTRAL_SERVER_INFO)
+            server = socketThread((SERVER_IP_ADDRESS, SERVER_PORT))
             server.sendInt(gameState["lobbyNum"])
             server.sendInt(0)
             hostIP = server.getInt()

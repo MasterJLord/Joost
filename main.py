@@ -15,7 +15,7 @@ eventHarvester = eventHarvester()
 def pingServer():
     try:
         pingSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        pingSocket.connect((CENTRAL_SERVER_INFO[0], CENTRAL_SERVER_INFO[1] + 1))
+        pingSocket.connect((SERVER_IP_ADDRESS, SERVER_PORT + 1))
         return True
     except ConnectionRefusedError:
         return False
