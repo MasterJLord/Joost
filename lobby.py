@@ -5,7 +5,7 @@ from writer import Writer
 from time import time
 from balls import *
 from playingFunc import setupGame
-from hostServer import SERVER_IP_ADDRESS, SERVER_PORT
+from serverLocation import SERVER_IP_ADDRESS, SERVER_PORT
 
 
 

@@ -1,4 +1,9 @@
-import pygame, pyperclip, math
+import pygame, math
+try:
+    import pyperclip
+    copyPasteImported = True
+except:
+    copyPasteImported = False
 from lobby import joinLobby
 from writer import Writer
 from socketThread import *
@@ -76,7 +81,7 @@ def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                     gameState["lobbyNum"] += CHAR_NUMS[gameState["lobbyName"][c]] * len(CHAR_NUMS)**c
                 return "Lobby" if joinLobby(gameState) else "MainMenu"
             
-            elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL:
+            elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL and copyPasteImported:
                 gameState["lobbyName"] = pyperclip.paste()
                 c = 0
                 while c < len(gameState["lobbyName"]):
@@ -85,6 +90,8 @@ def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                     else:
                         gameState["lobbyName"] = gameState["lobbyName"][0:c] + gameState["lobbyName"][c+1:]
                 gameState["lobbyName"] = gameState["lobbyName"][0:40]
+            elif e.key == pygame.K_c and e.mod & pygame.KMOD_CTRL and copyPasteImported:
+                pyperclip.copy(gameState["lobbyName"])
             elif e.key == pygame.K_BACKSPACE or e.key == pygame.K_DELETE:
                 if len(gameState["lobbyName"]) > 0:
                     gameState["lobbyName"] = gameState["lobbyName"][0 : len(gameState["lobbyName"]) - 1]

@@ -1,9 +1,8 @@
 from socketThread import *
 import pygame
+from serverLocation import *
 
-SERVER_IP_ADDRESS = "localhost" # TODO, maybe: find an actual server to host this on (i.e. raspberry pi time)
 LOBBY_ACTIVE_TIME = 300000 # A lobby cannot be created with the same name as an existing one until 5 at least 5 minutes have passed
-SERVER_PORT = 8884
 
 pygame.init()
 
