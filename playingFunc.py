@@ -70,7 +70,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["playerActionTimings"].insert(index, time)
                 gameState["playerActionEvents"].insert(index, (p, ACTION_CODES_REVERSED[option]))
 
-    safeTimeEnds = min(gameState["playerLastCheckups"])
+    safeTimeEnds = min(gameState["playerLastCheckups"])-1
     if gameState["savedTime"] < safeTimeEnds:
         physicsTick(gameState, safeTimeEnds, True)
         gameState["savedTime"] = safeTimeEnds

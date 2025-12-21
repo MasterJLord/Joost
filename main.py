@@ -67,6 +67,7 @@ try:
     while True:
         events = eventHarvester.getEvents()
 
+        # Runs the game
         mode = functionDict[mode](events, gameState)
 
         gameState["finalScreen"].blit(gameState["screen"], (0, 0))
@@ -81,6 +82,8 @@ try:
             if e.type == pygame.VIDEORESIZE:
                 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
                 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
+        
+        gameState["clock"].tick(60)
 
 
 
