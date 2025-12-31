@@ -30,16 +30,12 @@ try:
         "TypeHost": typingFrame
     }
 
-    gameState = {
-        "clock": pygame.time.Clock(),
-        "finalScreen": pygame.display.get_surface(),
-        "boardWidth": 300,
-        "goalHeight" : 50,
+    joustGameState = {
         "keybinds": {
             pygame.K_UP: "up",
             pygame.K_w: "up",
             pygame.K_LEFT: "left",
-            pygame.K_a: "left",
+            pygame.K_a: "left", 
             pygame.K_RIGHT: "right",
             pygame.K_d: "right"
         },
@@ -50,9 +46,17 @@ try:
         "drag": 0.0015,
         "minimumWallBounce" : 0.02,
         "playerJumpHeight": 0.06,
-        "playerMoveSpeed": 0.00025,
+        "playerMoveSpeed": 0.00025
+    }
+
+    gameState = {
+        "clock": pygame.time.Clock(),
+        "finalScreen": pygame.display.get_surface(),
+        "boardWidth": 300,
+        "goalHeight" : 50,
         "eventHarvester": eventHarvester,
-        "serverAvailable": pingServer()
+        "serverAvailable": pingServer(),
+        "joustGameState" : joustGameState
     }
     gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
     gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)

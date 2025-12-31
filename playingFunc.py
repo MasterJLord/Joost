@@ -23,7 +23,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             print("stopping")
             return
         if e.type == pygame.KEYDOWN:
-            action = gameState["keybinds"].get(e.key, None)
+            action = gameState["joustGameState"]["keybinds"].get(e.key, None)
             if action == "up":
                 gameState["lobby"].sendInt(ACTION_CODES["up"])
                 gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
@@ -39,7 +39,7 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["lastCheckupTime"] = e.time
                 gameState["movingDirection"] = "right"
         elif e.type == pygame.KEYUP:
-            action = gameState["keybinds"].get(e.key, None)
+            action = gameState["joustGameState"]["keybinds"].get(e.key, None)
             if action == gameState["movingDirection"]:
                 gameState["lobby"].sendInt(ACTION_CODES["stop"])
                 gameState["lobby"].sendInt(e.time - gameState["gameStartTime"])
@@ -91,8 +91,8 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
 
 def setupGame(gameState):
-    ball.changePhysics(gameState["drag"], gameState["minimumWallBounce"])
-    playerBall.setAttributes(gameState["playerJumpHeight"], gameState["playerMoveSpeed"])
+    ball.changePhysics(gameState["joustGameState"]["drag"], gameState["joustGameState"]["minimumWallBounce"])
+    playerBall.setAttributes(gameState["joustGameState"]["playerJumpHeight"], gameState["joustGameState"]["playerMoveSpeed"])
     goalBall.setGoalHeight(gameState["goalHeight"])
     gameState["leftScore"] = 0
     gameState["rightScore"] = 0
@@ -116,14 +116,14 @@ def setupRound(gameState):
     for p in gameState["playerColors"]:
         if -1 < p < TEAM_COLORS_NUM:
             team0 += 1
-            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["playerSize"], 100, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["joustGameState"]["playerSize"], 100, [gameState["boardWidth"] * 0.85, spacing0 * team0], [0, 0], [0, -1 * gameState["joustGameState"]["forceOfGravity"]]))
         elif TEAM_COLORS_NUM <= p:
             team1 += 1
-            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["playerSize"], 100, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1 * gameState["forceOfGravity"]]))
+            gameState["playersSaved"].append(playerBall(teamColors[p], gameState["joustGameState"]["playerSize"], 100, [gameState["boardWidth"] * 0.15, spacing1 * team1], [0, 0], [0, -1 * gameState["joustGameState"]["forceOfGravity"]]))
 
 
     gameState["ballsSaved"] = []
-    gameState["ballsSaved"].append(goalBall((0, 175, 175), gameState["ballSize"], gameState["ballMass"], [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, 0]))
+    gameState["ballsSaved"].append(goalBall((0, 175, 175), gameState["joustGameState"]["ballSize"], gameState["joustGameState"]["ballMass"], [gameState["boardWidth"] * 0.5, 50], [0, 0], [0, 0]))
 
 
     # Do other required pregame settup
