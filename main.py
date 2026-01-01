@@ -3,8 +3,10 @@ from mainMenu import *
 from playingFunc import *
 from lobby import *
 from countdown import *
+from gamesList import *
 from writer import Writer
 from typeHost import typingFrame
+import random
 
 pygame.init()
 
@@ -24,10 +26,11 @@ try:
     mode = "MainMenu"
     functionDict = {
         "MainMenu": mainMenuFrame,
-        "Lobby": lobbyFrame,
-        "Countdown": countdownFrame,
-        "Playing": playingFrame,
-        "TypeHost": typingFrame
+        "JoustLobby": lobbyFrame,
+        "JoustCountdown": countdownFrame,
+        "JoustPlaying": joustFrame,
+        "TypeHost": typingFrame,
+        "PickGame": gameSelectorFrame
     }
 
     joustGameState = {
@@ -49,6 +52,11 @@ try:
         "playerMoveSpeed": 0.00025
     }
 
+    gerrymanderGameState = {
+        "functionalGenerator": None,
+        "visualGenerator": None
+    }
+
     gameState = {
         "clock": pygame.time.Clock(),
         "finalScreen": pygame.display.get_surface(),
@@ -56,7 +64,8 @@ try:
         "goalHeight" : 50,
         "eventHarvester": eventHarvester,
         "serverAvailable": pingServer(),
-        "joustGameState" : joustGameState
+        "joustGameState" : joustGameState,
+        "chosenGame" : None
     }
     gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
     gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)

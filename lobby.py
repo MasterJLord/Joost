@@ -32,7 +32,7 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["gameStartTime"] = currentTime + gameStartTimeWorld - currentWorldTime
 
                 setupGame(gameState)
-                return "Countdown"
+                return "JoustCountdown"
 
     for e in events:
         # Starts the game
@@ -54,7 +54,7 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         if (gameState["playerColors"][p] > -1):
             pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1025 + 0.1 * p)), 0.05 * gameState["screenSize"][1])
 
-    return "Lobby"
+    return "JoustLobby"
 
 def getIPFromServer(gameState : dict) -> str:
     try:

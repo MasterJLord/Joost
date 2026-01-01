@@ -18,6 +18,6 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         if e.type == pygame.MOUSEBUTTONDOWN:
             gameState["isHost"] = e.pos[0] < gameState["screenSize"][0]/2
             gameState["lobbyName"] = ""
-            return "TypeHost"
+            return "PickGame"
     return "MainMenu"
         

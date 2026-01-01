@@ -79,7 +79,7 @@ def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["lobbyNum"] = 0
                 for c in range(len(gameState["lobbyName"])):
                     gameState["lobbyNum"] += CHAR_NUMS[gameState["lobbyName"][c]] * len(CHAR_NUMS)**c
-                return "Lobby" if joinLobby(gameState) else "MainMenu"
+                return "JoustLobby" if joinLobby(gameState) else "MainMenu"
             
             elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL and copyPasteImported:
                 gameState["lobbyName"] = pyperclip.paste()

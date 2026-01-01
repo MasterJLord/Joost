@@ -15,7 +15,7 @@ ACTION_CODES = {
 }
 ACTION_CODES_REVERSED = {b : a for (a, b) in ACTION_CODES.items()}
 
-def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
+def joustFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     for e in events:
         if e.type == pygame.QUIT:
             gameState["lobby"].sendInt(ACTION_CODES["quit"])
@@ -82,12 +82,12 @@ def playingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
     if gameState["gameEndTime"] < pygame.time.get_ticks():
         if gameState["leftScore"] > 3 or gameState["rightScore"] > 3:
-            return "Lobby"
+            return "JoustLobby"
         gameState["gameStartTime"] = gameState["gameEndTime"] + 3000
         setupRound(gameState)
-        return "Countdown"
+        return "JoustCountdown"
 
-    return "Playing"
+    return "JoustPlaying"
 
 
 def setupGame(gameState):
