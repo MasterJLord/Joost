@@ -4,9 +4,10 @@ try:
     copyPasteImported = True
 except:
     copyPasteImported = False
-from lobby import joinLobby
+from lobbyJoiningHelpers import joinLobby
 from writer import Writer
 from socketThread import *
+from gamesList import *
 
 
 LOBBY_NAME_LIMIT = 40
@@ -79,7 +80,15 @@ def typingFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["lobbyNum"] = 0
                 for c in range(len(gameState["lobbyName"])):
                     gameState["lobbyNum"] += CHAR_NUMS[gameState["lobbyName"][c]] * len(CHAR_NUMS)**c
-                return "JoustLobby" if joinLobby(gameState) else "MainMenu"
+                # Creates/joins the lobby
+                joinedSuccessfully = joinLobby(gameState)
+                # Moves on to the next screen
+                if (not joinedSuccessfully):
+                    return "MainMenu"
+                if gameState["isHost"]:
+                    gameState["lobby"].sendInt(gamesList.index(gameState["playingGame"]))
+                gameState["playingGame"] = gamesList[gameState["lobby"].getInt(0)]
+                return gameStarts[gameState["playingGame"]]
             
             elif e.key == pygame.K_v and e.mod & pygame.KMOD_CTRL and copyPasteImported:
                 gameState["lobbyName"] = pyperclip.paste()

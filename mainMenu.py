@@ -3,7 +3,7 @@ from socketThread import *
 from writer import Writer
 from balls import *
 from teamColors import teamColors
-from lobby import joinLobby
+from lobbyJoiningHelpers import joinLobby
 
 
 def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> str:
@@ -18,6 +18,6 @@ def mainMenuFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         if e.type == pygame.MOUSEBUTTONDOWN:
             gameState["isHost"] = e.pos[0] < gameState["screenSize"][0]/2
             gameState["lobbyName"] = ""
-            return "PickGame"
+            return "PickGame" if gameState["isHost"] else "TypeHost"
     return "MainMenu"
         

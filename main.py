@@ -1,9 +1,10 @@
 from eventHarvester import *
 from mainMenu import *
+from joustLobby import *
 from playingFunc import *
-from lobby import *
+from lobbyJoiningHelpers import *
 from countdown import *
-from gamesList import *
+from gameSelector import *
 from writer import Writer
 from typeHost import typingFrame
 import random
@@ -26,11 +27,16 @@ try:
     mode = "MainMenu"
     functionDict = {
         "MainMenu": mainMenuFrame,
-        "JoustLobby": lobbyFrame,
+        "PickGame": gameSelectorFrame,
+        "TypeHost": typingFrame,
+
+        "JoustSetup" : setupJoustLobby,
+        "JoustLobby": joustLobbyFrame,
         "JoustCountdown": countdownFrame,
         "JoustPlaying": joustFrame,
-        "TypeHost": typingFrame,
-        "PickGame": gameSelectorFrame
+
+        "PathsSetup": None,
+        "PathsLobby": None
     }
 
     joustGameState = {

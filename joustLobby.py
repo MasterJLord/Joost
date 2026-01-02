@@ -1,16 +1,19 @@
-import pygame, typing
-from socketThread import *
-from teamColors import *
+import pygame
 from writer import Writer
 from time import time
 from balls import *
 from playingFunc import setupGame
-from serverLocation import SERVER_IP_ADDRESS, SERVER_PORT
+from teamColors import *
 
 
+def setupJoustLobby(events : list[pygame.event.Event], gameState : dict) -> str:
+    gameState["playerColors"] = [-20 for i in range(6)]
+    gameState["lobby"].sendInt(2)
+    gameState["screen"].fill((0, 0, 0))
+    return "JoustLobby"
 
 # TODO: remove magic numbers (low priority)
-def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
+def joustLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     # Makes sure events are synced across all players' machines
     for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(6)):
         for m in range(n):
@@ -55,47 +58,3 @@ def lobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             pygame.draw.circle(gameState["screen"], teamColors[gameState["playerColors"][p]], (gameState["screenSize"][0] * (0.35 if gameState["playerColors"][p] > 9 else 0.65) - 0.05 * gameState["screenSize"][1], gameState["screenSize"][1] * (0.1025 + 0.1 * p)), 0.05 * gameState["screenSize"][1])
 
     return "JoustLobby"
-
-def getIPFromServer(gameState : dict) -> str:
-    try:
-        if gameState["isHost"]:
-            server = socketThread((SERVER_IP_ADDRESS, SERVER_PORT))
-            server.sendInt(gameState["lobbyNum"])
-            server.sendInt(6)
-            return "localhost"
-        else:
-            server = socketThread((SERVER_IP_ADDRESS, SERVER_PORT))
-            server.sendInt(gameState["lobbyNum"])
-            server.sendInt(0)
-            hostIP = server.getInt()
-            if hostIP == 0:
-                return None
-            print(hostIP)
-            ipAddressSegments = []
-            for i in range(math.ceil(math.log10(hostIP)/3)):
-                ipAddressSegments.append(math.floor((hostIP%(1000**(i+1)))/(1000**(i))))
-            ipAddressSegments.reverse()
-            ipAddressStrings = [str(i) for i in ipAddressSegments]
-            hostIPRedotted = ".".join(ipAddressStrings)
-            return hostIPRedotted
-    except ConnectionRefusedError:
-        gameState["serverAvailable"] = False
-        return None
-
-
-def joinLobby(gameState : dict) -> bool:
-    if gameState["lobbyJoinMode"] == "Lobby":
-        ipAddress = getIPFromServer(gameState)
-    elif gameState["lobbyJoinMode"] == "Hostname":
-        ipAddress = socket.gethostbyname(gameState["lobbyName"])
-    elif gameState["lobbyJoinMode"] == "IP Address":
-        ipAddress = gameState["lobbyName"]
-    try:
-        gameState["lobby"] = serverConnector((ipAddress, 20422), gameState["isHost"], 8)
-    except ConnectionError:
-        return False
-    gameState["eventHarvester"].recaption(gameState["lobbyName"])
-    gameState["myPlayerNum"] = gameState["lobby"].myPlayerNum
-    gameState["playerColors"] = [-20 for i in range(6)]
-    gameState["lobby"].sendInt(2)
-    return True
