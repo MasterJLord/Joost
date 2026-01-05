@@ -25,3 +25,18 @@ teamColors = [
 ]
 
 TEAM_COLORS_NUM = len(teamColors) / 2
+
+individualColors = [
+    pygame.Color("darkSlateBlue"),
+    pygame.Color("chartreuse"),
+    pygame.Color("deeppink2"),
+    pygame.Color("orange"),
+    pygame.Color("orangered"),
+    pygame.Color("orchid2"),
+    pygame.Color("blueviolet"),
+    pygame.Color("yellow2"),
+    pygame.Color("forestgreen"),
+    pygame.Color("dodgerblue1"),
+    pygame.Color("firebrick"),
+    pygame.Color("bisque")
+]

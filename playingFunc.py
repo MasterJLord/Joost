@@ -90,7 +90,7 @@ def joustFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     return "JoustPlaying"
 
 
-def setupGame(gameState):
+def setupJoust(gameState):
     ball.changePhysics(gameState["joustGameState"]["drag"], gameState["joustGameState"]["minimumWallBounce"])
     playerBall.setAttributes(gameState["joustGameState"]["playerJumpHeight"], gameState["joustGameState"]["playerMoveSpeed"])
     goalBall.setGoalHeight(gameState["goalHeight"])

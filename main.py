@@ -5,6 +5,8 @@ from playingFunc import *
 from lobbyJoiningHelpers import *
 from countdown import *
 from gameSelector import *
+from pathLobby import *
+from pathsMain import *
 from writer import Writer
 from typeHost import typingFrame
 import random
@@ -35,8 +37,9 @@ try:
         "JoustCountdown": countdownFrame,
         "JoustPlaying": joustFrame,
 
-        "PathsSetup": None,
-        "PathsLobby": None
+        "PathsSetup": setupPathLobby,
+        "PathsLobby": pathLobbyFrame,
+        "PathsPlaying": pathsFrame
     }
 
     joustGameState = {
@@ -71,7 +74,8 @@ try:
         "eventHarvester": eventHarvester,
         "serverAvailable": pingServer(),
         "joustGameState" : joustGameState,
-        "chosenGame" : None
+        "chosenGame" : None,
+        "frameTime" : 0
     }
     gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
     gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
@@ -102,7 +106,7 @@ try:
                 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
                 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
         
-        gameState["clock"].tick(60)
+        gameState["frameTime"] = gameState["clock"].tick(60)
 
 
 

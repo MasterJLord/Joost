@@ -28,14 +28,14 @@ class pathSegment (node):
         
 class tileEdgeNode (node):
     NOTCH_POSITIONS = {
-        1 : (0.3, 0),
-        2 : (0.7, 0),
-        3 : (1, 0.3),
-        4 : (1, 0.7),
-        5 : (0.7, 1),
-        6 : (0.3, 1),
-        7 : (0, 0.7),
-        8 : (0, 0.3)
+        0 : (0.3, 0),
+        1 : (0.7, 0),
+        2 : (1, 0.3),
+        3 : (1, 0.7),
+        4 : (0.7, 1),
+        5 : (0.3, 1),
+        6 : (0, 0.7),
+        7 : (0, 0.3)
     }
     def __init__(self, position : list, edgePosition : int):
         self.position : list = position
@@ -106,12 +106,14 @@ class curveConnectedNode (tileEdgeNode):
 
 class tileGrid:
     def __init__(self):
-        self.tileGrid : dict = {}
+        self.tileGrid : dict[int, dict[int, tile]] = {}
+        self.allTiles : list[tile] = []
     
     def addTileToGrid(self, tile, position : list):
         if (not position[0] in self.tileGrid):
             self.tileGrid[position[0]] = {}
         self.tileGrid[position[0]][position[1]] = tile
+        self.allTiles.append(tile)
 
     def getTileAt(self, position : list):
         if (not position[0] in self.tileGrid):
@@ -123,17 +125,22 @@ class tileGrid:
 class tile:
 
     BACKGROUND_COLOR = (60, 60, 60)
-    imageSize = None
+    imageSize = 100
     @staticmethod
     def setImageSize(edgeLength : int) -> None:
         tile.imageSize = edgeLength
 
     randomGenerator : random.Random = None
     @staticmethod
-    def setSeed(seed : random.Random) -> None:
-        tile.randomGenerator = seed
+    def setSeed(seed : int) -> None:
+        tile.randomGenerator = random.Random(seed)
 
-    def __init__(self, position : list = None, defaultSetup : bool = True):
+    grid : tileGrid = None
+    @staticmethod
+    def setTileGrid(grid : tileGrid) -> None:
+        tile.grid = grid
+
+    def __init__(self, position : list = [0, 0], defaultSetup : bool = True):
         self.position = position
         self.edges : list[tileEdgeNode] = []
         for i in range(8):
@@ -147,7 +154,7 @@ class tile:
     
 
     def generateInternalPaths(self):
-        nums = range(8)
+        nums = [i for i in range(8)]
         tile.randomGenerator.shuffle(nums)
         for i in range(4):
             newPath = pathSegment(self.edges[nums[i*2]], self.edges[nums[i*2 + 1]])
@@ -158,7 +165,7 @@ class tile:
     def generateImage(self):
         if (tile.imageSize == None):
             return
-        self.image = pygame.surface((tile.imageSize, tile.imageSize))
+        self.image = pygame.surface.Surface((tile.imageSize, tile.imageSize))
         self.image.fill(self.BACKGROUND_COLOR)
         for e in self.edges:
             e.render(self.image)
@@ -168,14 +175,14 @@ class tile:
         if (clockwise):
             for e in self.edges:
                 e.edgePosition += 1
-                if e.edgePosition > 8:
+                if e.edgePosition > 7:
                     e.edgePosition -= 8
             self.edges.insert(0, self.edges.pop(7))
             self.edges.insert(0, self.edges.pop(7))
         else:
             for e in self.edges:
                 e.edgePosition -= 1
-                if e.edgePosition < 1:
+                if e.edgePosition < 0:
                     e.edgePosition += 8
             self.edges.append(self.edges.pop(0))
             self.edges.append(self.edges.pop(0))
@@ -185,6 +192,7 @@ class tile:
     def move(self, newPosition : list):
         self.position[0] = newPosition[0]   
         self.position[1] = newPosition[1]
+        # TODO: also change position in tileGrid
 
 
     def getNumberedNode(self, position : int) -> tileEdgeNode:
@@ -193,26 +201,28 @@ class tile:
                 return e
 
 
-    def place(self, position : list, tileGrid: tileGrid):
+    def place(self, position : list, tileGrid: tileGrid = None):
+        if tileGrid == None:
+            tileGrid = tile.grid
         self.move(position)
         tileGrid.addTileToGrid(self, self.position)
 
         upTile = tileGrid.getTileAt([self.position[0], self.position[1]-1])
         if (upTile != None):
-            self.getNumberedNode(1).connectToOtherNode(upTile.getNumberedNode(6))
-            self.getNumberedNode(2).connectToOtherNode(upTile.getNumberedNode(5))
+            self.getNumberedNode(0).connectToOtherNode(upTile.getNumberedNode(5))
+            self.getNumberedNode(1).connectToOtherNode(upTile.getNumberedNode(4))
         rightTile = tileGrid.getTileAt([self.position[0]+1, self.position[1]])
         if (rightTile != None):
-            self.getNumberedNode(3).connectToOtherNode(rightTile.getNumberedNode(8))
-            self.getNumberedNode(4).connectToOtherNode(rightTile.getNumberedNode(7))
+            self.getNumberedNode(2).connectToOtherNode(rightTile.getNumberedNode(7))
+            self.getNumberedNode(3).connectToOtherNode(rightTile.getNumberedNode(6))
         downTile = tileGrid.getTileAt([self.position[0], self.position[1]+1])
         if (downTile != None):
-            self.getNumberedNode(5).connectToOtherNode(downTile.getNumberedNode(2))
-            self.getNumberedNode(6).connectToOtherNode(downTile.getNumberedNode(1))
+            self.getNumberedNode(4).connectToOtherNode(downTile.getNumberedNode(1))
+            self.getNumberedNode(5).connectToOtherNode(downTile.getNumberedNode(0))
         leftTile = tileGrid.getTileAt([self.position[0]-1, self.position[1]])
         if (leftTile != None):
-            self.getNumberedNode(7).connectToOtherNode(leftTile.getNumberedNode(4))
-            self.getNumberedNode(8).connectToOtherNode(leftTile.getNumberedNode(3))
+            self.getNumberedNode(6).connectToOtherNode(leftTile.getNumberedNode(3))
+            self.getNumberedNode(7).connectToOtherNode(leftTile.getNumberedNode(2))
 
 
 
@@ -220,10 +230,13 @@ class tile:
 
 
 class player:
-    def __init__(self, color : pygame.color, startNode : tileEdgeNode):
+    def __init__(self, color : pygame.color, startNode : tileEdgeNode, startingHandSize = 0):
         self.score = 0
         self.color = color
         self.token = playerToken(self, startNode)
+        self.hand = []
+        for i in range(startingHandSize):
+            self.hand.append(tile())
 
 
 

@@ -2,7 +2,7 @@ import pygame
 from writer import Writer
 from time import time
 from balls import *
-from playingFunc import setupGame
+from playingFunc import setupJoust
 from teamColors import *
 
 
@@ -34,7 +34,7 @@ def joustLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 currentTime = pygame.time.get_ticks()
                 gameState["gameStartTime"] = currentTime + gameStartTimeWorld - currentWorldTime
 
-                setupGame(gameState)
+                setupJoust(gameState)
                 return "JoustCountdown"
 
     for e in events:
