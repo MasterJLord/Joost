@@ -73,7 +73,7 @@ try:
         "goalHeight" : 50,
         "eventHarvester": eventHarvester,
         "serverAvailable": pingServer(),
-        "joustGameState" : joustGameState,
+        "joustGameState" : joustGameState,  
         "chosenGame" : None,
         "frameTime" : 0
     }
