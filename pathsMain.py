@@ -24,12 +24,13 @@ HAND_SIZE = 2
 
 def setupPaths(gameState : dict):
     tile.setSeed(gameState["seed"])
+    gameState["randomGenerator"] = tile.randomGenerator
     tile.setTileGrid(tileGrid())
     tile.setImageSize(gameState["screenSize"][1]/5)
     startTile = tile(defaultSetup=False)
     gameState["playerObjects"] = []
     playerAtPosition = [i for i in range(8)]
-    tile.randomGenerator.shuffle(playerAtPosition)
+    gameState["randomGenerator"].shuffle(playerAtPosition)
     startTile.edges = []
     for e in range(8):
         playerNum = playerAtPosition[e]
@@ -44,6 +45,7 @@ def setupPaths(gameState : dict):
 
     gameState["cardRotations"] = [0 for i in range(HAND_SIZE)]
     gameState["activePlayer"] = 0
+    gameState["totalTurns"] = 0
 
     gameState["scrollPosition"] = [0, 0]
 
@@ -89,7 +91,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     while gameState["lobby"].getMessagesAvailable()[gameState["activePlayer"]] > 0:
         message = gameState["lobby"].getInt(gameState["activePlayer"])
         if ACTION_CODES_REVERSED[message] == "QUIT":
-            gameState["playerColors"][gameState["activePlayer"]] = -1
+            gameState["playerObjects"][gameState["activePlayer"]].token.die()
             incrementActivePlayerNum(gameState)
         elif ACTION_CODES_REVERSED[message] == "PLAY_CARD":
             cardChoice = gameState["lobby"].getInt(gameState["activePlayer"])
@@ -100,6 +102,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             placingLocation = [activePlayer.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][0], activePlayer.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][1]]
             activePlayer.hand.pop(cardChoice).place(placingLocation)
             activePlayer.hand.append(tile())
+            placeRandomTile(gameState)
             incrementActivePlayerNum(gameState)
 
     # Scrolls the screen
@@ -118,6 +121,9 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         if a == "LEFT":
             gameState["scrollPosition"][0] += gameState["frameTime"] * SCROLL_SPEED
 
+    if endGameNode.gameOver:
+        return "tilesScoring"
+
     # Draw placed tiles
     gameState["screen"].fill((0, 0, 0))
     for t in tile.grid.allTiles:
@@ -129,16 +135,19 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     
     # Draw tile preview
     if cardHovered > -1:
-        placingLocation = (myPlayer.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][0], myPlayer.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][1])
-        gameState["screen"].blit(myPlayer.hand[cardHovered].image, 
-                            (
-                                (placingLocation[0] + gameState["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2,
-                                (placingLocation[1] + gameState["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2
-                            ))
+        if myPlayer.token != None:
+            placingLocation = (myPlayer.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][0], myPlayer.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][1])
+            gameState["screen"].blit(myPlayer.hand[cardHovered].image, 
+                                (
+                                    (placingLocation[0] + gameState["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2,
+                                    (placingLocation[1] + gameState["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2
+                                ))
 
     # Draw players
     for p in gameState["playerObjects"]:
         token : playerToken = p.token
+        if token == None:
+            continue
         pygame.draw.circle(gameState["screen"],
                            p.color,
                            (
@@ -161,10 +170,54 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
 
 def incrementActivePlayerNum(gameState : dict):
+    gameState["totalTurns"] += 1
     gameState["activePlayer"] += 1
     if gameState["activePlayer"] >= len(gameState["playerColors"]):
         gameState["activePlayer"] -= len(gameState["playerColors"])
-    while gameState["playerColors"][gameState["activePlayer"]] < 0:
+    skippedPlayers = 0
+    while gameState["playerColors"][gameState["activePlayer"]] < 0 or gameState["playerObjects"][gameState["activePlayer"]].token == None:
+        skippedPlayers += 1
+        if skippedPlayers >= len(gameState["playerColors"]):
+            endGameNode.EndGame()
+            return
         gameState["activePlayer"] += 1
         if gameState["activePlayer"] >= len(gameState["playerColors"]):
             gameState["activePlayer"] -= len(gameState["playerColors"])
+
+def placeRandomTile(gameState : dict):
+    playerFacingTiles = []
+    for p in gameState["playerObjects"]:
+        if p.token != None:
+            playerFacingTiles.append((p.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][0], 
+                                     p.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][1]))
+    checkingRadius = 1
+    validTiles = []
+    while len(validTiles) < 3:
+        checkingRadius += 1
+        validTiles = []
+        # fills in a square perimeter of tiles
+        for i in range(checkingRadius * 2 + 1):
+            validTiles.append((checkingRadius, i - checkingRadius))
+            validTiles.append((-1 * checkingRadius, i - checkingRadius))
+            if i != 0 and i != checkingRadius * 2:
+                validTiles.append((i - checkingRadius, checkingRadius))
+                validTiles.append((i - checkingRadius, -1 * checkingRadius))
+
+        
+        # confirms that all tiles are valid
+        for n in reversed(range(len(validTiles))):
+            if validTiles[n] in playerFacingTiles or tile.grid.locationIsOccupied(validTiles[n]):
+                validTiles.pop(n)
+
+    
+    placingLocation = gameState["randomGenerator"].choice(validTiles)
+    placingTile = tile()
+
+    if gameState["randomGenerator"].randint(0, 10) < gameState["totalTurns"]:
+        replacingEdge = gameState["randomGenerator"].randint(0, 7)
+        otherReplacingEdge = placingTile.getNumberedNode(replacingEdge).connectedPath.traverse(placingTile.getNumberedNode(replacingEdge)).edgePosition
+        placingTile.edges[replacingEdge] = endGameNode(placingTile.position, replacingEdge)
+        placingTile.edges[otherReplacingEdge] = endGameNode(placingTile.position, otherReplacingEdge)
+        placingTile.generateImage()
+
+    placingTile.place(placingLocation)

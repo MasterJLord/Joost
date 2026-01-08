@@ -72,12 +72,16 @@ class deathNode(tileEdgeNode):
                            self.DOT_COLOR,
                            (tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][0] * image.get_width(), tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][1] * image.get_height()),
                            self.DOT_RADIUS * image.get_width())
+        
+    def _connectToOtherNode(self, otherNode):
+        if otherNode.inhabitingPlayer != None:
+            otherNode.inhabitingPlayer.die()
 
 
 
 class endGameNode(tileEdgeNode):
     DOT_COLOR = (200, 200, 150)
-    DOT_RADIUs = 0.06
+    DOT_RADIUS = 0.06
     gameOver = False
 
     @staticmethod
@@ -89,6 +93,10 @@ class endGameNode(tileEdgeNode):
                            self.DOT_COLOR,
                            (tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][0] * image.get_width(), tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][1] * image.get_height()),
                            self.DOT_RADIUS * image.get_width())
+        
+    def _connectToOtherNode(self, otherNode):
+        if otherNode.inhabitingPlayer != None:
+            endGameNode.EndGame()
 
 
 
@@ -116,6 +124,11 @@ class curveConnectedNode (tileEdgeNode):
                 self.connectedPath.node1 = otherNode.connectedPath
             elif self.connectedPath.node2 == self:
                 self.connectedPath.node2 = otherNode.connectedPath
+        else:
+            if self.connectedPath.node1 == self:
+                self.connectedPath.node1 = otherNode
+            elif self.connectedPath.node2 == self:
+                self.connectedPath.node2 = otherNode
 
 
 class tileGrid:
@@ -123,17 +136,22 @@ class tileGrid:
         self.tileGrid : dict[int, dict[int, tile]] = {}
         self.allTiles : list[tile] = []
     
-    def addTileToGrid(self, tile, position : list):
+    def addTileToGrid(self, tile, position : list[int]):
         if (not position[0] in self.tileGrid):
             self.tileGrid[position[0]] = {}
         self.tileGrid[position[0]][position[1]] = tile
         self.allTiles.append(tile)
 
-    def getTileAt(self, position : list):
+    def getTileAt(self, position : list[int]):
         if (not position[0] in self.tileGrid):
             return None
         else:
             return self.tileGrid[position[0]].get(position[1])
+    
+    def locationIsOccupied(self, position : list[int]):
+        if not position[0] in self.tileGrid:
+            return False
+        return position[1] in self.tileGrid[position[0]]
 
 
 class tile:
@@ -267,7 +285,11 @@ class playerToken:
             traversion[1].inhabitingPlayer = self
             self.node = traversion[1]
         elif type(traversion[1]) == deathNode:
-            self.player.score = 0
-            self.player.token = None
+            self.die()
         elif type(traversion[1]) == endGameNode:
             endGameNode.EndGame() 
+
+    def die(self):
+        self.node.inhabitingPlayer = None
+        self.player.token = None
+        self.node = None

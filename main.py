@@ -39,7 +39,8 @@ try:
 
         "PathsSetup": setupPathLobby,
         "PathsLobby": pathLobbyFrame,
-        "PathsPlaying": pathsFrame
+        "PathsPlaying": pathsFrame,
+        "PathsScoring": None
     }
 
     joustGameState = {
