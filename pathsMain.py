@@ -176,7 +176,7 @@ def incrementActivePlayerNum(gameState : dict):
     skippedPlayers = 0
     while gameState["playerColors"][gameState["pathsGameState"]["activePlayer"]] < 0 or gameState["pathsGameState"]["playerObjects"][gameState["pathsGameState"]["activePlayer"]].token == None:
         skippedPlayers += 1
-        if skippedPlayers >= len(gameState["playerColors"]):
+        if skippedPlayers >= len(gameState["playerColors"]) - 1:
             endGameNode.EndGame()
             return
         gameState["pathsGameState"]["activePlayer"] += 1

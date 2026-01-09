@@ -41,7 +41,9 @@ try:
         "PathsSetup": setupPathLobby,
         "PathsLobby": pathLobbyFrame,
         "PathsPlaying": pathsFrame,
-        "PathsScoring": pathsResultsFrame
+        "PathsScoring": pathsResultsFrame,
+
+        "Quit": None # caues the program to attempt to call a nonexistent function, thereby causing a crash and quitting the game quite effectively
     }
 
     joustGameState = {
