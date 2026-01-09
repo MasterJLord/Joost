@@ -91,6 +91,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         message = gameState["lobby"].getInt(gameState["pathsGameState"]["activePlayer"])
         if ACTION_CODES_REVERSED[message] == "QUIT":
             gameState["pathsGameState"]["playerObjects"][gameState["pathsGameState"]["activePlayer"]].token.die()
+            gameState["playerColors"][gameState["pathsGameState"]["activePlayer"]] = -1
             incrementActivePlayerNum(gameState)
         elif ACTION_CODES_REVERSED[message] == "PLAY_CARD":
             cardChoice = gameState["lobby"].getInt(gameState["pathsGameState"]["activePlayer"])
@@ -163,6 +164,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                                  ))
 
     if endGameNode.gameOver:
+        endGameNode.gameOver = False
         return "PathsScoring"
     else:
         return "PathsPlaying"

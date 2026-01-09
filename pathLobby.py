@@ -8,6 +8,7 @@ import random
 
 
 networkingCodes = [
+    "QUIT", 
     "START_GAME",
     "CHANGE_COLOR"
 ]
@@ -29,6 +30,8 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
 
             elif gameState["myPlayerNum"] * gameState["screenSize"][1] * 0.1 < e.pos[1] < (gameState["myPlayerNum"] + 1) * gameState["screenSize"][1] * 0.1:
                 gameState["lobby"].sendInt(networkingCodes.index("CHANGE_COLOR"))
+        elif e.type == pygame.QUIT:
+            gameState["lobby"].sendInt(networkingCodes.index("QUIT"))
 
     for (n, p) in zip(gameState["lobby"].getMessagesAvailable(), range(8)):
         for m in range(n):
@@ -41,6 +44,8 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                 gameState["playerColors"][p] += 1
                 if gameState["playerColors"][p] >= len(individualColors):
                     gameState["playerColors"][p] = 0
+            elif option == "QUIT":
+                gameState["playerColors"][p] = -1
 
             elif p == 0 and option == "START_GAME":
                 gameState["seed"] = gameState["lobby"].getInt(0)

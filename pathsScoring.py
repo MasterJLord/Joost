@@ -9,7 +9,7 @@ def pathsResultsFrame(events : list[pygame.event.Event], gameState : dict) -> st
     for e in events:
         if e.type == pygame.MOUSEBUTTONDOWN:
             if e.pos[1] > gameState["screenSize"][1] * 0.8 and gameState["pathsGameState"]["endingFadeInProgress"] > 50:
-                return "Quit"
+                return "PathsLobby"
 
     if gameState["pathsGameState"]["endingFadeInProgress"] < 255:
         # Scrolls the screen
@@ -59,7 +59,7 @@ def pathsResultsFrame(events : list[pygame.event.Event], gameState : dict) -> st
         sortedPlayers = []
         for p in gameState["pathsGameState"]["playerObjects"]:
             for i in range(len(sortedPlayers)):
-                if sortedPlayers[i].score < p.score:
+                if sortedPlayers[i].score <= p.score:
                     sortedPlayers.insert(i, p)
                     break
             if not p in sortedPlayers:
