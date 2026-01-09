@@ -182,7 +182,7 @@ class tile:
             self.defaultGeneratePaths()
             self.generateImage()    
 
-    def defaultGeneratePaths(self):
+    def defaultGeneratePaths(self) -> None:
         nums = [i for i in range(8)]
         self.edges : list[tileEdgeNode] = [curveConnectedNode(self.position, i, None) for i in range(8)]
         tile.randomGenerator.shuffle(nums)
@@ -192,7 +192,7 @@ class tile:
             self.edges[nums[i*2 + 1]].connectedPath = newPath
         
 
-    def generateImage(self):
+    def generateImage(self) -> None:
         if (tile.imageSize == None):
             return
         self.image = pygame.surface.Surface((tile.imageSize, tile.imageSize), pygame.SRCALPHA)
@@ -201,7 +201,7 @@ class tile:
             e.render(self.image)
         
 
-    def rotate(self, clockwise : bool):
+    def rotate(self, clockwise : bool) -> None:
         if (clockwise):
             for e in self.edges:
                 e.edgePosition += 2
@@ -219,7 +219,7 @@ class tile:
         self.image = pygame.transform.rotate(self.image, 270 if clockwise else 90)
 
 
-    def move(self, newPosition : list):
+    def move(self, newPosition : list) -> None:
         self.position[0] = newPosition[0]   
         self.position[1] = newPosition[1]
         # TODO: also change position in tileGrid
@@ -231,7 +231,7 @@ class tile:
                 return e
 
 
-    def place(self, position : list, tileGrid: tileGrid = None):
+    def place(self, position : list, tileGrid: tileGrid = None) -> None:
         if tileGrid == None:
             tileGrid = tile.grid
         self.move(position)

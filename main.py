@@ -7,6 +7,7 @@ from countdown import *
 from gameSelector import *
 from pathLobby import *
 from pathsMain import *
+from pathsScoring import *
 from writer import Writer
 from typeHost import typingFrame
 import random
@@ -40,7 +41,7 @@ try:
         "PathsSetup": setupPathLobby,
         "PathsLobby": pathLobbyFrame,
         "PathsPlaying": pathsFrame,
-        "PathsScoring": None
+        "PathsScoring": pathsResultsFrame
     }
 
     joustGameState = {
@@ -62,9 +63,8 @@ try:
         "playerMoveSpeed": 0.00025
     }
 
-    gerrymanderGameState = {
-        "functionalGenerator": None,
-        "visualGenerator": None
+    pathsGameState = {
+        "endingFadeInProgress" : 0
     }
 
     gameState = {
@@ -75,6 +75,7 @@ try:
         "eventHarvester": eventHarvester,
         "serverAvailable": pingServer(),
         "joustGameState" : joustGameState,  
+        "pathsGameState" : pathsGameState,
         "chosenGame" : None,
         "frameTime" : 0
     }
