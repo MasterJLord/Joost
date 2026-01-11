@@ -1,4 +1,5 @@
 import pygame, random, typing, math
+from teamColors import individualColors
 
 class node:
     pass
@@ -18,7 +19,8 @@ class pathSegment (node):
     def traverse(self, inNode : node, color : pygame.Color = None):
         if color != None and self.COLOR != color:
             self.COLOR = color
-            self.tile.generateImage()
+            if self.tile != None:
+                self.tile.generateImage()
 
         if (self.node1 is inNode):
             return self.node2
@@ -71,6 +73,9 @@ class tileEdgeNode (node):
 
 
     def _connectToOtherNode(self, otherNode):
+        pass
+
+    def place(self, tileGrid):
         pass
 
 
@@ -144,11 +149,35 @@ class curveConnectedNode (tileEdgeNode):
             elif self.connectedPath.node2 == self:
                 self.connectedPath.node2 = otherNode
 
+class teleporterNode (tileEdgeNode):
+
+    def __init__(self, tile, edgePosition : int, color : pygame.Color = None):
+        self.tile = tile
+        self.edgePosition = edgePosition
+        if color == None:
+            self.color = tile.randomGenerator.choice(individualColors)
+        else:
+            self.color = color
+        self.connectedPath = None
+
+    def place(self, tileGrid):
+        if self.color in tileGrid.unmatchedPortals:
+            otherTile = tileGrid.unmatchedPortals[self.color]
+            self.connectedPath = pathSegment(self, otherTile)
+            otherTile.connectedPath = self.connectedPath
+            tileGrid.unmatchedPortals.pop(self.color)
+        else:
+            tileGrid.unmatchedPortals[self.color] = self
+
+
+        
+
 
 class tileGrid:
     def __init__(self):
         self.tileGrid : dict[int, dict[int, tile]] = {}
         self.allTiles : list[tile] = []
+        self.unmatchedPortals : dict[pygame.Color, teleporterNode]= {}
     
     def addTileToGrid(self, tile, position : list[int]):
         if (not position[0] in self.tileGrid):
@@ -267,6 +296,9 @@ class tile:
         if (leftTile != None):
             self.getNumberedNode(6).connectToOtherNode(leftTile.getNumberedNode(3))
             self.getNumberedNode(7).connectToOtherNode(leftTile.getNumberedNode(2))
+
+        for e in self.edges:
+            e.place(tileGrid)
 
 
 
