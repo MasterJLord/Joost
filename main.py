@@ -43,7 +43,7 @@ try:
         "PathsPlaying": pathsFrame,
         "PathsScoring": pathsResultsFrame,
 
-        "Quit": None # caues the program to attempt to call a nonexistent function, thereby causing a crash and quitting the game quite effectively
+        "Quit": None # causes the program to attempt to call a nonexistent function, thereby causing a crash and quitting the game quite effectively
     }
 
     joustGameState = {
@@ -66,7 +66,14 @@ try:
     }
 
     pathsGameState = {
-        "endingFadeInProgress" : 0
+        "endingFadeInProgress" : 0,
+        "startingMap" : [],
+        "randomGenerator" : None,
+        "playerObjects" : [],
+        "cardRotations" : [0, 0],
+        "totalTurns" : 0,
+        "activePlayer" : 0,
+        "scrollPosition" : [0, 0]
     }
 
     gameState = {

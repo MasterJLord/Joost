@@ -8,18 +8,29 @@ class pathSegment (node):
     def __init__(self, node1 : node, node2 : node):
         self.node1 = node1
         self.node2 = node2
+        if node1 != None:
+            self.tile = self.node1.tile
+        elif node2 != None:
+            self.tile = self.node2.tile
+        else:
+            self.tile = None
 
-    def traverse(self, inNode : node):
+    def traverse(self, inNode : node, color : pygame.Color = None):
+        if color != None and self.COLOR != color:
+            self.COLOR = color
+            self.tile.generateImage()
+
         if (self.node1 is inNode):
             return self.node2
         elif (self.node2 is inNode):
             return self.node1
+
         
     # Returns: [how many path segments were traversed; the endpoint of the path] 
-    def fullTraverse(self, inNode : node):
-        nextStep = self.traverse(inNode)
+    def fullTraverse(self, inNode : node, color : pygame.Color = None):
+        nextStep = self.traverse(inNode, color=color)
         if type(nextStep) == pathSegment:
-            laterTraverses = nextStep.fullTraverse(self)
+            laterTraverses = nextStep.fullTraverse(self, color=color)
             return [laterTraverses[0] + 1, laterTraverses[1]]
         else:
             return [1, nextStep]
@@ -45,8 +56,8 @@ class tileEdgeNode (node):
         6 : (-1, 0),
         7 : (-1, 0)
     }
-    def __init__(self, position : list, edgePosition : int):
-        self.position : list = position
+    def __init__(self, tile, edgePosition : int):
+        self.tile = tile
         self.edgePosition : int = edgePosition 
         self.inhabitingPlayer : playerToken= None
     
@@ -102,16 +113,19 @@ class endGameNode(tileEdgeNode):
 
 class curveConnectedNode (tileEdgeNode):
     CURVE_WIDTH = 0.03
-    def __init__(self, position : list, edgePosition : int, connectedPath : pathSegment):
-        super().__init__(position, edgePosition)
+    def __init__(self, tile, edgePosition : int, connectedPath : pathSegment):
+        super().__init__(tile, edgePosition)
         self.connectedPath : pathSegment = connectedPath
+        if self.connectedPath != None:
+            self.connectedNode = self.connectedPath.traverse(self)
 
     def render(self, image : pygame.surface):
-        otherEdgePosition = self.connectedPath.traverse(self).edgePosition
+        if getattr(self, "connectedNode", None) == None:
+            self.connectedNode = self.connectedPath.traverse(self)
         pygame.draw.line(image, 
                          self.connectedPath.COLOR,
                         (tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][0] * image.get_width(), tileEdgeNode.NOTCH_POSITIONS[self.edgePosition][1] * image.get_height()),
-                        (tileEdgeNode.NOTCH_POSITIONS[otherEdgePosition][0] * image.get_width(), tileEdgeNode.NOTCH_POSITIONS[otherEdgePosition][1] * image.get_height()),
+                        (tileEdgeNode.NOTCH_POSITIONS[self.connectedNode.edgePosition][0] * image.get_width(), tileEdgeNode.NOTCH_POSITIONS[self.connectedNode.edgePosition][1] * image.get_height()),
                         math.ceil(curveConnectedNode.CURVE_WIDTH * image.get_width()))
         
         
@@ -175,7 +189,7 @@ class tile:
     def __init__(self, position : list = None, defaultSetup : bool = True):
         self.position = [0, 0] if position == None else position
 
-        self.edges : list[tileEdgeNode] = [tileEdgeNode(self.position, i) for i in range(8)]
+        self.edges : list[tileEdgeNode] = [tileEdgeNode(self, i) for i in range(8)]
         self.image = None
 
         if (defaultSetup): 
@@ -184,7 +198,7 @@ class tile:
 
     def defaultGeneratePaths(self) -> None:
         nums = [i for i in range(8)]
-        self.edges : list[tileEdgeNode] = [curveConnectedNode(self.position, i, None) for i in range(8)]
+        self.edges : list[tileEdgeNode] = [curveConnectedNode(self, i, None) for i in range(8)]
         tile.randomGenerator.shuffle(nums)
         for i in range(4):
             newPath = pathSegment(self.edges[nums[i*2]], self.edges[nums[i*2 + 1]])
@@ -279,7 +293,7 @@ class playerToken:
 
     def move(self, node : curveConnectedNode) -> None:
         self.node.inhabitingPlayer = None
-        traversion = node.connectedPath.fullTraverse(node)
+        traversion = node.connectedPath.fullTraverse(node, color=self.player.color)
         self.player.score += traversion[0]
         if type(traversion[1]) == curveConnectedNode:
             traversion[1].inhabitingPlayer = self

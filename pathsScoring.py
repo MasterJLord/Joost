@@ -28,27 +28,27 @@ def pathsResultsFrame(events : list[pygame.event.Event], gameState : dict) -> st
             if a == "LEFT":
                 gameState["pathsGameState"]["scrollPosition"][0] += gameState["frameTime"] * SCROLL_SPEED
 
-        # Draw placed tiles
-        gameState["screen"].fill((0, 0, 0))
-        for t in tile.grid.allTiles:
-            gameState["screen"].blit(t.image, 
-                                    (
-                                        (t.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2,
-                                        (t.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2
-                                    ))
-        
-        # Draw players
-        for p in gameState["pathsGameState"]["playerObjects"]:
-            token : playerToken = p.token
-            if token == None:
-                continue
-            pygame.draw.circle(gameState["screen"],
-                            p.color,
-                            (
-                                    (token.node.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][0] * tile.imageSize,
-                                    (token.node.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][1] * tile.imageSize
+    # Draw placed tiles
+    gameState["screen"].fill((0, 0, 0))
+    for t in tile.grid.allTiles:
+        gameState["screen"].blit(t.image, 
+                                 (
+                                    (t.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2,
+                                    (t.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2
+                                ))
+    
+    # Draw players
+    for p in gameState["pathsGameState"]["playerObjects"]:
+        token : playerToken = p.token
+        if token == None:
+            continue
+        pygame.draw.circle(gameState["screen"],
+                           p.color,
+                           (
+                                (token.node.tile.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][0] * tile.imageSize,
+                                (token.node.tile.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][1] * tile.imageSize
 
-                            ), 0.02 * gameState["screenSize"][1])
+                           ), 0.02 * gameState["screenSize"][1])
         
     gameState["pathsGameState"]["endingFadeInProgress"] += gameState["frameTime"] * FADE_IN_SPEED
 

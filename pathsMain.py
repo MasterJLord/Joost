@@ -20,6 +20,7 @@ ACTION_CODES = {
 }
 ACTION_CODES_REVERSED = {b : a for (a, b) in ACTION_CODES.items()}
 HAND_SIZE = 2
+OPACITY = 190
 
 
 def setupPaths(gameState : dict):
@@ -32,7 +33,7 @@ def setupPaths(gameState : dict):
     gameState["pathsGameState"]["playerObjects"] = []
     playerStartPositions = [i for i in range(8)]
     gameState["pathsGameState"]["randomGenerator"].shuffle(playerStartPositions)
-    startTile.edges = [deathNode(startTile.position, e) for e in range(8)]
+    startTile.edges = [deathNode(startTile, e) for e in range(8)]
     for p in range(8):
         if (gameState["playerColors"][p] < 0):
             continue
@@ -99,7 +100,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
             activePlayer = gameState["pathsGameState"]["playerObjects"][gameState["pathsGameState"]["activePlayer"]]
             for i in range(rotationAmount):
                 activePlayer.hand[cardChoice].rotate(clockwise=True)
-            placingLocation = [activePlayer.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][0], activePlayer.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][1]]
+            placingLocation = [activePlayer.token.node.tile.position[0] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][0], activePlayer.token.node.tile.position[1] + tileEdgeNode.FACING_DIRECTIONS[activePlayer.token.node.edgePosition][1]]
             activePlayer.hand.pop(cardChoice).place(placingLocation)
             activePlayer.hand.append(tile())
             placeRandomTile(gameState)
@@ -133,8 +134,11 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     # Draw tile preview
     if cardHovered > -1:
         if myPlayer.token != None:
-            placingLocation = (myPlayer.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][0], myPlayer.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][1])
-            gameState["screen"].blit(myPlayer.hand[cardHovered].image, 
+            if gameState["pathsGameState"]["activePlayer"] != gameState["myPlayerNum"]:
+                transparentImage = myPlayer.hand[cardHovered].image .copy()
+                transparentImage.set_alpha(OPACITY)
+            placingLocation = (myPlayer.token.node.tile.position[0] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][0], myPlayer.token.node.tile.position[1] + tileEdgeNode.FACING_DIRECTIONS[myPlayer.token.node.edgePosition][1])
+            gameState["screen"].blit(transparentImage if gameState["pathsGameState"]["activePlayer"] != gameState["myPlayerNum"] else myPlayer.hand[cardHovered].image, 
                                 (
                                     (placingLocation[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2,
                                     (placingLocation[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2
@@ -148,8 +152,8 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
         pygame.draw.circle(gameState["screen"],
                            p.color,
                            (
-                                (token.node.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][0] * tile.imageSize,
-                                (token.node.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][1] * tile.imageSize
+                                (token.node.tile.position[0] + gameState["pathsGameState"]["scrollPosition"][0]) * tile.imageSize + gameState["screenSize"][0] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][0] * tile.imageSize,
+                                (token.node.tile.position[1] + gameState["pathsGameState"]["scrollPosition"][1]) * tile.imageSize + gameState["screenSize"][1] / 2 + tileEdgeNode.NOTCH_POSITIONS[token.node.edgePosition][1] * tile.imageSize
 
                            ), 0.02 * gameState["screenSize"][1])
 
@@ -157,7 +161,7 @@ def pathsFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     for t in range(handSize):
         if gameState["pathsGameState"]["activePlayer"] != gameState["myPlayerNum"]:
             transparentImage = myPlayer.hand[t].image.copy()
-            transparentImage.set_alpha(190)
+            transparentImage.set_alpha(OPACITY)
         gameState["screen"].blit(transparentImage if gameState["pathsGameState"]["activePlayer"] != gameState["myPlayerNum"] else myPlayer.hand[t].image,
                                  (gameState["screenSize"][0]/2 + (t * tile.imageSize * 1.2) - (handSize * tile.imageSize * 0.6) + tile.imageSize * 0.1,
                                   gameState["screenSize"][1] - tile.imageSize * 1.5
@@ -190,8 +194,8 @@ def placeRandomTile(gameState : dict):
     playerFacingTiles = []
     for p in gameState["pathsGameState"]["playerObjects"]:
         if p.token != None:
-            playerFacingTiles.append((p.token.node.position[0] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][0], 
-                                     p.token.node.position[1] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][1]))
+            playerFacingTiles.append((p.token.node.tile.position[0] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][0], 
+                                     p.token.node.tile.position[1] + tileEdgeNode.FACING_DIRECTIONS[p.token.node.edgePosition][1]))
     checkingRadius = 1
     validTiles = []
     # leaves a couple of holes in each ring
