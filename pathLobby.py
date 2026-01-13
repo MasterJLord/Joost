@@ -1,9 +1,10 @@
 import pygame
 from socketThread import *
 from teamColors import *
-from pathsMain import setupPaths
+from pathsMain import *
 from writer import Writer
 from time import time
+from pathsMaps import defaultPathsMaps
 import random
 
 
@@ -12,6 +13,7 @@ networkingCodes = [
     "START_GAME",
     "CHANGE_COLOR"
 ]
+MINIMAP_DOT_COLOR = (255, 255, 255)
 
 def setupPathLobby(events : list[pygame.event.Event], gameState : dict) -> str:
     gameState["playerColors"] = [-1 for i in range(8)]
@@ -23,10 +25,15 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
     gameState["screen"].fill((0, 0, 0))
     for e in events:
         if e.type == pygame.MOUSEBUTTONDOWN:
-            if (gameState["myPlayerNum"] == 0) and (e.pos[1] > gameState["screenSize"][1] * 0.8):
-                seed = random.Random(time()).randint(0, 100000)
-                gameState["lobby"].sendInt(networkingCodes.index("START_GAME"))
-                gameState["lobby"].sendInt(seed)
+            if (gameState["myPlayerNum"] == 0):
+                if (e.pos[1] > gameState["screenSize"][1] * 0.8):
+                    seed = random.randint(0, 100000)
+                    gameState["lobby"].sendInt(networkingCodes.index("START_GAME"))
+                    gameState["lobby"].sendInt(seed)
+                elif e.pos[0] > gameState["screenSize"][0] * 0.8 and e.pos[1] > gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.2:
+                    gameState["pathsGameState"]["mapSelected"] = (gameState["pathsGameState"]["mapSelected"] + 1) % len(defaultPathsMaps)
+                    gameState["pathsGameState"]["startingMap"] = defaultPathsMaps[gameState["pathsGameState"]["mapSelected"]]
+
 
             elif gameState["myPlayerNum"] * gameState["screenSize"][1] * 0.1 < e.pos[1] < (gameState["myPlayerNum"] + 1) * gameState["screenSize"][1] * 0.1:
                 gameState["lobby"].sendInt(networkingCodes.index("CHANGE_COLOR"))
@@ -64,6 +71,29 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                              ))
     startWord = Writer.Write(15, "Start Game", color = (255, 255, 255) if gameState["myPlayerNum"] == 0 else (90, 85, 85))
     gameState["screen"].blit(startWord, (gameState["screenSize"][0] / 2 - startWord.get_width()/2, gameState["screenSize"][1] * 0.825))
+
+    if gameState["myPlayerNum"] == 0:
+        scale = 1
+        if gameState["pathsGameState"]["startingMap"] != []:
+            for p in gameState["pathsGameState"]["startingMap"]:
+                if abs(p[0]) > scale:
+                    scale = abs(p[0])
+                if abs(p[1]) > scale:
+                    scale = abs(p[1])
+            scale = scale * 2 + 1
+        miniMap = pygame.Surface((gameState["screenSize"][0] * 0.2, gameState["screenSize"][0] * 0.2))
+        miniMap.fill(tile.BACKGROUND_COLOR)
+        for p in gameState["pathsGameState"]["startingMap"]:
+            pygame.draw.rect(miniMap,
+                            MINIMAP_DOT_COLOR,
+                            (miniMap.get_width()/2 + (p[0] - 0.5) * miniMap.get_width() / scale,
+                             miniMap.get_width()/2 + (p[1] - 0.5) * miniMap.get_width() / scale,
+                             miniMap.get_width() / scale,
+                             miniMap.get_width() / scale
+                             ))
+        gameState["screen"].blit(miniMap,
+                                 (gameState["screenSize"][0] * 0.8,
+                                  gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.2))
 
     return "PathsLobby"
 

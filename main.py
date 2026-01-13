@@ -66,8 +66,9 @@ try:
     }
 
     pathsGameState = {
+        "mapSelected" : 0,
+        "startingMap" : defaultPathsMaps[0],
         "endingFadeInProgress" : 0,
-        "startingMap" : [],
         "randomGenerator" : None,
         "playerObjects" : [],
         "cardRotations" : [0, 0],

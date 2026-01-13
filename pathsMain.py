@@ -41,7 +41,25 @@ def setupPaths(gameState : dict):
         playerObject = player(individualColors[gameState["playerColors"][p]], startTile.getNumberedNode(playerStartPositions[p]), startingHandSize=HAND_SIZE)
         gameState["pathsGameState"]["playerObjects"].append(playerObject)
     startTile.generateImage()
-    startTile.place((0, 0))
+    startTile.place([0, 0])
+
+    # Place starting tiles
+    if gameState["myPlayerNum"] == 0:
+        for p in gameState["pathsGameState"]["startingMap"]:
+            gameState["lobby"].sendInt(p[0], echo=False)
+            gameState["lobby"].sendInt(p[1], echo=False)
+            tile([p[0], p[1]])
+        gameState["lobby"].sendInt(0, echo=False)
+        gameState["lobby"].sendInt(0, echo=False)
+    else:
+        while True:
+            nextPos = [0, 0]
+            nextPos[0] = gameState["lobby"].getInt(0)
+            nextPos[1] = gameState["lobby"].getInt(0)
+            if nextPos == [0, 0]:
+                break
+            else:
+                tile([nextPos[0], nextPos[1]])
 
     gameState["pathsGameState"]["cardRotations"] = [0 for i in range(HAND_SIZE)]
     gameState["pathsGameState"]["activePlayer"] = 0

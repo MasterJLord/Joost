@@ -216,14 +216,17 @@ class tile:
         tile.grid = grid
 
     def __init__(self, position : list = None, defaultSetup : bool = True):
-        self.position = [0, 0] if position == None else position
+        self.position = [0, 0]
 
         self.edges : list[tileEdgeNode] = [tileEdgeNode(self, i) for i in range(8)]
         self.image = None
 
         if (defaultSetup): 
             self.defaultGeneratePaths()
-            self.generateImage()    
+            self.generateImage()
+
+        if position != None:
+            self.place(position)
 
     def defaultGeneratePaths(self) -> None:
         nums = [i for i in range(8)]
@@ -331,6 +334,8 @@ class playerToken:
             traversion[1].inhabitingPlayer = self
             self.node = traversion[1]
         elif type(traversion[1]) == deathNode:
+            self.die()
+        elif type(traversion[1]) == teleporterNode:
             self.die()
         elif type(traversion[1]) == endGameNode:
             endGameNode.EndGame() 
