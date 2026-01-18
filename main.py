@@ -40,6 +40,7 @@ try:
 
         "PathsSetup": setupPathLobby,
         "PathsLobby": pathLobbyFrame,
+        "PathsEditor": pathsLevelEditorFrame,
         "PathsPlaying": pathsFrame,
         "PathsScoring": pathsResultsFrame,
 
@@ -67,7 +68,7 @@ try:
 
     pathsGameState = {
         "mapSelected" : 0,
-        "startingMap" : defaultPathsMaps[0],
+        "startingMap" : defaultPathsMaps[0][:],
         "endingFadeInProgress" : 0,
         "randomGenerator" : None,
         "playerObjects" : [],
