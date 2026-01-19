@@ -69,6 +69,7 @@ try:
     pathsGameState = {
         "mapSelected" : 0,
         "startingMap" : defaultPathsMaps[0][:],
+        "showLevelEditorHint" : True,
         "endingFadeInProgress" : 0,
         "randomGenerator" : None,
         "playerObjects" : [],

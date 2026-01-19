@@ -31,11 +31,14 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                     seed = random.randint(0, 100000)
                     gameState["lobby"].sendInt(networkingCodes.index("START_GAME"))
                     gameState["lobby"].sendInt(seed)
+                
                 elif e.pos[0] > gameState["screenSize"][0] * 0.8 and e.pos[1] > gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.2:
                     gameState["pathsGameState"]["mapSelected"] = (gameState["pathsGameState"]["mapSelected"] + 1) % len(defaultPathsMaps)
                     gameState["pathsGameState"]["startingMap"] = defaultPathsMaps[gameState["pathsGameState"]["mapSelected"]][:]
+                    gameState["pathsGameState"]["showLevelEditorHint"] = False
                 elif e.pos[0] < gameState["screenSize"][0] * 0.2 and e.pos[1] > gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.2:
                     gameState["pathsGameState"]["scrollPosition"] = [0, 0]
+                    gameState["pathsGameState"]["showLevelEditorHint"] = False
                     return "PathsEditor"
 
             elif gameState["myPlayerNum"] * gameState["screenSize"][1] * 0.1 < e.pos[1] < (gameState["myPlayerNum"] + 1) * gameState["screenSize"][1] * 0.1:
@@ -73,7 +76,7 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                                 gameState["screenSize"][1] * 0.1
                              ))
     startWord = Writer.Write(15, "Start Game", color = (255, 255, 255) if gameState["myPlayerNum"] == 0 else (90, 85, 85))
-    gameState["screen"].blit(startWord, (gameState["screenSize"][0] / 2 - startWord.get_width()/2, gameState["screenSize"][1] * 0.825))
+    gameState["screen"].blit(startWord, (gameState["screenSize"][0] / 2 - startWord.get_width()/2, gameState["screenSize"][1] * 0.9 - startWord.get_height()/2))
 
     if gameState["myPlayerNum"] == 0:
         scale = 1
@@ -105,6 +108,20 @@ def pathLobbyFrame(events : list[pygame.event.Event], gameState : dict) -> str:
                              gameState["screenSize"][0] * 0.2,
                              gameState["screenSize"][0] * 0.2
                          ))
+        if gameState["pathsGameState"]["showLevelEditorHint"]:
+            customText = Writer.Write(4, "Edit Map", 20)
+            cycleText = Writer.Write(4, "Switch Map", 20)
+            gameState["screen"].blit(customText,
+                                    [
+                                        gameState["screenSize"][0] * 0.1 - customText.get_width()/2,
+                                        gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.1 - customText.get_height()/2
+                                    ])
+            gameState["screen"].blit(cycleText,
+                                    [
+                                        gameState["screenSize"][0] * 0.9 - cycleText.get_width()/2,
+                                        gameState["screenSize"][1] * 0.8 - gameState["screenSize"][0] * 0.1 - cycleText.get_height()/2
+                                    ])            
+        
 
     return "PathsLobby"
 
