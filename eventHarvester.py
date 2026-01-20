@@ -13,30 +13,36 @@ class eventHarvester:
         threading.Thread(target=self.__harvestEvents, daemon=True).start()
 
     def __harvestEvents(self):
-        pygame.display.set_mode((pygame.display.Info().current_w, pygame.display.Info().current_h - 75), pygame.RESIZABLE)
-        pygame.display.set_caption(self.caption)
-        while self.continuing:
-            if len(self.tempQueue) > 0:
-                if self.lock.acquire(blocking=False):
-                    for e in self.tempQueue:
-                        self.eventQueue.append(e)
-                    self.lock.release()
-                    self.tempQueue.clear()
+        try:
+            pygame.display.set_mode((pygame.display.Info().current_w, pygame.display.Info().current_h - 75), pygame.RESIZABLE)
+            pygame.display.set_caption(self.caption)
+            while self.continuing:
+                if len(self.tempQueue) > 0:
+                    if self.lock.acquire(blocking=False):
+                        for e in self.tempQueue:
+                            if e.type == pygame.VIDEORESIZE:
+                                print("received")
+                            self.eventQueue.append(e)
+                        self.lock.release()
+                        self.tempQueue.clear()
+                    else:
+                        potentialEvent = pygame.event.wait(1)
+                        if potentialEvent.type != pygame.NOEVENT:
+                            potentialEvent.time = pygame.time.get_ticks()
+                            self.tempQueue.append(potentialEvent)
                 else:
-                    potentialEvent = pygame.event.wait(1)
-                    if potentialEvent.type != pygame.NOEVENT:
-                        potentialEvent.time = pygame.time.get_ticks()
-                        self.tempQueue.append(potentialEvent)
-            else:
-                nextEvent = pygame.event.wait(10)
-                if nextEvent.type != pygame.NOEVENT:
-                    nextEvent.time = pygame.time.get_ticks()
-                    self.tempQueue.append(nextEvent)
+                    nextEvent = pygame.event.wait(10)
+                    if nextEvent.type != pygame.NOEVENT:
+                        nextEvent.time = pygame.time.get_ticks()
+                        self.tempQueue.append(nextEvent)
 
-            if self.recaptionNeeded:
-                with self.captionLock:
-                    pygame.display.set_caption(self.caption)
-                    self.recaptionNeeded = False
+                if self.recaptionNeeded:
+                    with self.captionLock:
+                        pygame.display.set_caption(self.caption)
+                        self.recaptionNeeded = False
+        except Exception as e:
+            print("hasdfeere")
+            print(e.__traceback__)
 
     def getEvents(self) -> list:
         response = []

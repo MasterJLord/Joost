@@ -103,6 +103,9 @@ try:
 
     while True:
         events = eventHarvester.getEvents()
+        for e in events:
+            if e.type == pygame.VIDEORESIZE:
+                print("here1")
 
         # Runs the game
         mode = functionDict[mode](events, gameState)
@@ -119,11 +122,13 @@ try:
             if e.type == pygame.VIDEORESIZE:
                 gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
                 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
+                print("here2")
         
         gameState["frameTime"] = gameState["clock"].tick(60)
 
 
 
 except Exception as e:
+    print("crashed")
     eventHarvester.stop()
     raise(e)
