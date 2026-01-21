@@ -120,7 +120,7 @@ try:
                 quit()
             # TODO : stop crashing on resize when this is supposed to be triggered
             if e.type == pygame.VIDEORESIZE:
-                gameState["screenSize"] = (gameState["finalScreen"].get_width(), gameState["finalScreen"].get_height())
+                gameState["screenSize"] = e.size
                 gameState["screen"] = pygame.Surface(gameState["screenSize"], pygame.SRCALPHA)
                 print("here2")
         
