@@ -9,7 +9,7 @@ screen = eventHarvester(True)
 
 
 
-def runTest(screen):
+def runTest(screen : eventHarvester):
     try:
         clock = pygame.time.Clock()
         clock.tick(1)
@@ -20,15 +20,23 @@ def runTest(screen):
         running = True
 
         while running:
+            print("here1")
             for event in screen.getEvents():
+                print("here2")
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.VIDEORESIZE:
                     print("here")
-            clock.tick(0.5)
+            # crashes more often on a higher framerate
+            clock.tick(1000)
 
+            screen.lock.acquire()
             pygame.display.get_surface().blit(intermediateScreen, (0, 0))
+            screen.lock.release()
+
+            # screen.lock.acquire()
             pygame.display.update()
+            # screen.lock.release()
     except BaseException as e:
             print(e.__traceback__)
             raise(e)

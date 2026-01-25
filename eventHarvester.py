@@ -4,7 +4,7 @@ import pygame, threading
 class eventHarvester:
     def __init__(self, dontstartrunning : False):
         self.eventQueue = []
-        self.lock = threading.Lock()
+        self.lock : threading.Lock = threading.Lock()
         self.captionLock = threading.Lock()
         self.tempQueue = []
         self.continuing = True
@@ -19,7 +19,7 @@ class eventHarvester:
             pygame.display.set_caption(self.caption)
             while self.continuing:
                 if len(self.tempQueue) > 0:
-                    if self.lock.acquire(blocking=False):
+                    if self.lock.acquire():
                         for e in self.tempQueue:
                             if e.type == pygame.VIDEORESIZE:
                                 print("received")
@@ -27,12 +27,16 @@ class eventHarvester:
                         self.lock.release()
                         self.tempQueue.clear()
                     else:
+                        self.lock.acquire()
                         potentialEvent = pygame.event.wait(1)
+                        self.lock.release()
                         if potentialEvent.type != pygame.NOEVENT:
                             potentialEvent.time = pygame.time.get_ticks()
                             self.tempQueue.append(potentialEvent)
                 else:
+                    self.lock.acquire()
                     nextEvent = pygame.event.wait(10)
+                    self.lock.release()
                     if nextEvent.type != pygame.NOEVENT:
                         nextEvent.time = pygame.time.get_ticks()
                         self.tempQueue.append(nextEvent)
@@ -47,7 +51,7 @@ class eventHarvester:
 
     def getEvents(self) -> list:
         response = []
-        if self.lock.acquire(blocking=False):
+        if self.lock.acquire():
             for e in self.eventQueue:
                 response.append(e)
             self.eventQueue.clear()
