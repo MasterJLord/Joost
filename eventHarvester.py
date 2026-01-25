@@ -2,7 +2,7 @@ import pygame, threading
 
 
 class eventHarvester:
-    def __init__(self):
+    def __init__(self, dontstartrunning : False):
         self.eventQueue = []
         self.lock = threading.Lock()
         self.captionLock = threading.Lock()
@@ -10,9 +10,10 @@ class eventHarvester:
         self.continuing = True
         self.recaptionNeeded = False
         self.caption = "Joost"
-        threading.Thread(target=self.__harvestEvents, daemon=True).start()
+        if not dontstartrunning:
+            threading.Thread(target=self.harvestEvents, daemon=True).start()
 
-    def __harvestEvents(self):
+    def harvestEvents(self):
         try:
             pygame.display.set_mode((pygame.display.Info().current_w, pygame.display.Info().current_h - 75), pygame.RESIZABLE)
             pygame.display.set_caption(self.caption)
@@ -40,9 +41,9 @@ class eventHarvester:
                     with self.captionLock:
                         pygame.display.set_caption(self.caption)
                         self.recaptionNeeded = False
-        except Exception as e:
-            print("hasdfeere")
+        except BaseException as e:
             print(e.__traceback__)
+            raise(e)
 
     def getEvents(self) -> list:
         response = []
