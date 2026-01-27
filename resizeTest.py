@@ -22,7 +22,7 @@ def runTest(screen : eventHarvester):
         while running:
             print("here1")
             for event in screen.getEvents():
-                print("here2")
+                print("here2")  
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.VIDEORESIZE:
@@ -30,6 +30,7 @@ def runTest(screen : eventHarvester):
             # crashes more often on a higher framerate
             clock.tick(1000)
 
+            # TODO: move pygame.display.update code onto eventHarvester thread
             screen.lock.acquire()
             pygame.display.get_surface().blit(intermediateScreen, (0, 0))
             screen.lock.release()
